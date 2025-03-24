@@ -1,5 +1,8 @@
 /nbproject/private/
 /build
-/avrrfm.elf
-/avrrfm.hex
-/avrrfm.lst
+*.elf
+*.hex
+*.lst
+*.a
+*.d
+*.o
