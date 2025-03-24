@@ -2,16 +2,12 @@
 
 ## About
 
-Experimental library project to drive an RFM69HCW radio module with plain 
-avr-libc.  
+Static avr-libc library providing basic support for RFM69 radio modules.  
 
-This is work in progress. Simple Tx-Rx with response is working so far.  
+This is work in progress. Simple Tx-Rx with response works so far.  
 
-## Build
-
-    avr-gcc -mmcu=atmega328p -DF_CPU=8000000UL -O2 -I. -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums  -Wall -Wstrict-prototypes -g -ggdb -ffunction-sections -fdata-sections -Wl,--gc-sections -mrelax -std=gnu99 -MMD -MP -MFlibrfm.d -MTlibrfm.d librfm.c -c -olibrfm.o
-
-    avr-ar rcs librfm.a librfm.o
+I'm impressed how well these radio modules work; the range achieved with 
+simple wire antennas as well as the reliable packet transmission.  
 
 ## Range
 

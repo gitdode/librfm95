@@ -1,4 +1,6 @@
 # Makefile to build librfm
+#
+# Simplified version from: https://github.com/hexagon5un/AVR-Programming
 
 MCU = atmega328p
 F_CPU = 8000000
@@ -6,6 +8,7 @@ F_CPU = 8000000
 MAIN = librfm.c
 
 CC = avr-gcc
+AR = avr-ar
 
 CFLAGS =  -mmcu=$(MCU) -DF_CPU=$(F_CPU)UL
 CFLAGS += -O2 -I.
@@ -16,6 +19,9 @@ CFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections -mrelax
 CFLAGS += -std=gnu99
 # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105523
 # CFLAGS += --param=min-pagesize=0
+CFLAGS += -c
+
+ARFLAGS = rcs
 
 TARGET = $(strip $(basename $(MAIN)))
 SRC += $(TARGET).c
@@ -23,15 +29,18 @@ SRC += $(TARGET).c
 OBJ = $(SRC:.c=.o) 
 OBJ = $(SRC:.S=.o)
 
-$(TARGET).elf: librfm.h pins.h spi.h types.h utils.h Makefile
+$(TARGET).o: librfm.h pins.h spi.h types.h utils.h Makefile
 
-all: $(TARGET).elf
+all: $(TARGET).a
+	
+%.a: %.o
+	$(AR) $(ARFLAGS) $(TARGET).a $(TARGET).o
 
-%.elf: $(SRC)
+%.o: $(SRC)
 	$(CC) $(CFLAGS) $(SRC) --output $@ 
 
 clean:
-	rm -f $(TARGET).elf $(TARGET).hex $(TARGET).obj \
+	rm -f $(TARGET).a $(TARGET).hex $(TARGET).obj \
 	$(TARGET).o $(TARGET).d $(TARGET).eep $(TARGET).lst \
 	$(TARGET).lss $(TARGET).sym $(TARGET).map $(TARGET)~ \
 	$(TARGET).eeprom
