@@ -18,26 +18,16 @@
   </sourceRootList>
   <projectmakefile>/home/dode/dev/librfm/Makefile</projectmakefile>
   <confs>
-    <conf name="Default" type="0">
+    <conf name="Custom" type="3">
       <toolsSet>
         <compilerSet>AVR|GNU</compilerSet>
         <dependencyChecking>false</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
-      <codeAssistance>
-      </codeAssistance>
-      <makefileType>
-        <makeTool>
-          <buildCommandWorkingDir>/home/dode/dev/librfm</buildCommandWorkingDir>
-          <buildCommand>${MAKE} -f Makefile</buildCommand>
-          <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
-          <executablePath></executablePath>
-        </makeTool>
-        <preBuild>
-          <preBuildCommandWorkingDir>.</preBuildCommandWorkingDir>
-          <preBuildCommand></preBuildCommand>
-        </preBuild>
-      </makefileType>
+      <compileType>
+        <archiverTool>
+        </archiverTool>
+      </compileType>
       <item path="/home/dode/dev/librfm/librfm.c" ex="false" tool="0" flavor2="0">
       </item>
     </conf>

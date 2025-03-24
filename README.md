@@ -9,6 +9,16 @@ This is work in progress. Simple Tx-Rx with response works so far.
 I'm impressed how well these radio modules work; the range achieved with 
 simple wire antennas as well as the reliable packet transmission.  
 
+## TODO
+
+- Add support for RFM9x (LoRa)
+
+## Usage
+
+1. Include `librfm.h` and `librfm.a` in the project
+2. To make the library device and CPU frequency independent, the
+`_rfm*` functions in `librfm.h` must be implemented in the application
+
 ## Range
 
 Setting `RegPaLevel` to `0x5f`, which gives +13 dBm with `PA1`, indoor range is 

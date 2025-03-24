@@ -1,31 +1,17 @@
 /*
- * File:   rfm69.c
+ * File:   librfm.c
  * Author: torsten.roemer@luniks.net
  *
  * Created on 28. Januar 2025, 19:57
  */
 
 #include "librfm.h"
-#include "types.h"
+#include "utils.h"
 
 static volatile uint8_t irqFlags1 = 0;
 static volatile uint8_t irqFlags2 = 0;
 static volatile uint8_t timeoutInts = 0;
 static volatile bool timeoutEnabled = false;
-
-/**
- * Selects the radio to talk to via SPI.
- */
-static void spiSel(void) {
-    PORT_RFM &= ~(1 << PIN_RCS);
-}
-
-/**
- * Deselects the radio to talk to via SPI.
- */
-static void spiDes(void) {
-    PORT_RFM |= (1 << PIN_RCS);
-}
 
 /**
  * Writes the given value to the given register.
@@ -34,10 +20,10 @@ static void spiDes(void) {
  * @param value
  */
 static void regWrite(uint8_t reg, uint8_t value) {
-    spiSel();
-    transmit(reg | 0x80);
-    transmit(value);
-    spiDes();
+    _rfmSel();
+    _rfmTx(reg | 0x80);
+    _rfmTx(value);
+    _rfmDes();
 }
 
 /**
@@ -47,10 +33,10 @@ static void regWrite(uint8_t reg, uint8_t value) {
  * @return value
  */
 static uint8_t regRead(uint8_t reg) {
-    spiSel();
-    transmit(reg & 0x7f);
-    uint8_t value = transmit(0x00);
-    spiDes();
+    _rfmSel();
+    _rfmTx(reg & 0x7f);
+    uint8_t value = _rfmTx(0x00);
+    _rfmDes();
 
     return value;
 }
@@ -87,14 +73,15 @@ static void timeout(void) {
     irqFlags1 |= (1 << 2);
 }
 
-void initRadio(uint64_t freq, uint8_t node) {
+void rfmInit(uint64_t freq, uint8_t node) {
     // wait a bit after power on
-    _delay_ms(10);
+    _rfmDelay5();
+    _rfmDelay5();
 
     // pull reset LOW to turn on the module
-    PORT_RFM &= ~(1 << PIN_RRST);
+    _rfmOn();
 
-    _delay_ms(5);
+    _rfmDelay5();
 
     // uint8_t version = regRead(0x10);
     // printString("Version: ");
@@ -199,55 +186,56 @@ void initRadio(uint64_t freq, uint8_t node) {
 /**
  * Reads interrupt flags when a radio interrupt occurs.
  */
-void intRadio(void) {
+void rfmInt(void) {
     irqFlags1 = regRead(IRQ_FLAGS1);
     irqFlags2 = regRead(IRQ_FLAGS2);
 }
 
-void timeRadio(void) {
+void rfmTimer(void) {
     if (timeoutEnabled && timeoutInts++ >= TIMEOUT_INTS) {
         timeoutEnable(false);
         timeout();
     }
 }
 
-void sleepRadio(void) {
+void rfmSleep(void) {
     setMode(MODE_SLEEP);
 }
 
-void wakeRadio(void) {
+void rfmWake(void) {
     setMode(MODE_STDBY);
     // should better wait for ModeReady irq?
-    _delay_ms(5);
+    _rfmDelay5();
 }
 
-void setNodeAddress(uint8_t address) {
+void rfmSetNodeAddress(uint8_t address) {
     regWrite(NODE_ADDR, address);
 }
 
-uint8_t getRssi(void) {
+uint8_t rfmGetRssi(void) {
     return regRead(RSSI_VALUE);
 }
 
-void setOutputPower(uint8_t rssi) {
+// TODO make pure setter
+void rfmSetOutputPower(uint8_t rssi) {
     uint8_t pa = 0x40; // -18 dBm with PA1
     // adjust power from -2 to +13 dBm
     pa += min(max(rssi - 69, PA_MIN), PA_MAX);
     regWrite(PA_LEVEL, pa);
 }
 
-uint8_t getOutputPower(void) {
+uint8_t rfmGetOutputPower(void) {
     return regRead(PA_LEVEL);
 }
 
-void startReceive(void) {
+void rfmStartReceive(void) {
     // get "PayloadReady" on DIO0
     regWrite(DIO_MAP1, 0x40);
 
     setMode(MODE_RX);
 }
 
-PayloadFlags payloadReady(void) {
+PayloadFlags rfmPayloadReady(void) {
     PayloadFlags flags = {.ready = false, .crc = false};
     if (irqFlags2 & (1 << 2)) {
         flags.ready = true;
@@ -259,33 +247,33 @@ PayloadFlags payloadReady(void) {
     return flags;
 }
 
-size_t readPayload(uint8_t *payload, size_t size) {
+size_t rfmReadPayload(uint8_t *payload, size_t size) {
     size_t len = regRead(FIFO);
     len = min(len, size);
 
     // TODO assume and ignore address for now
     regRead(FIFO);
 
-    spiSel();
-    transmit(FIFO);
+    _rfmSel();
+    _rfmTx(FIFO);
     for (size_t i = 0; i < len; i++) {
-        payload[i] = transmit(FIFO);
+        payload[i] = _rfmTx(FIFO);
     }
-    spiDes();
+    _rfmDes();
 
     return len;
 }
 
-size_t receivePayload(uint8_t *payload, size_t size, bool timeout) {
+size_t rfmReceivePayload(uint8_t *payload, size_t size, bool timeout) {
     timeoutEnable(timeout);
-    startReceive();
+    rfmStartReceive();
 
     // wait until "PayloadReady" or timeout
     do {} while (!(irqFlags2 & (1 << 2)) && !(irqFlags1 & (1 << 2)));
     bool ready = irqFlags2 & (1 << 2);
     bool timedout = irqFlags1 & (1 << 2);
-
     clearIrqFlags();
+
     if (ready) {
         timeoutEnable(false);
     }
@@ -298,28 +286,28 @@ size_t receivePayload(uint8_t *payload, size_t size, bool timeout) {
         return 0;
     }
 
-    return readPayload(payload, size);
+    return rfmReadPayload(payload, size);
 }
 
-size_t transmitPayload(uint8_t *payload, size_t size, uint8_t node) {
+size_t rfmTransmitPayload(uint8_t *payload, size_t size, uint8_t node) {
     // message + address byte
     size_t len = min(size, MESSAGE_SIZE) + 1;
 
-    spiSel();
-    transmit(FIFO | 0x80);
-    transmit(len);
-    transmit(node);
+    _rfmSel();
+    _rfmTx(FIFO | 0x80);
+    _rfmTx(len);
+    _rfmTx(node);
     for (size_t i = 0; i < size; i++) {
-        transmit(payload[i]);
+        _rfmTx(payload[i]);
     }
-    spiDes();
+    _rfmDes();
 
     // get "PacketSent" on DIO0 (default)
     regWrite(DIO_MAP1, 0x00);
 
     setMode(MODE_TX);
 
-    loop_until_bit_is_set(irqFlags2, 3);
+    do {} while (!(irqFlags2 & (1 << 3)));
     clearIrqFlags();
 
     setMode(MODE_STDBY);

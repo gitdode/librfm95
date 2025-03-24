@@ -2,15 +2,11 @@
 #
 # Simplified version from: https://github.com/hexagon5un/AVR-Programming
 
-MCU = atmega328p
-F_CPU = 8000000
-
 MAIN = librfm.c
 
 CC = avr-gcc
 AR = avr-ar
 
-CFLAGS =  -mmcu=$(MCU) -DF_CPU=$(F_CPU)UL
 CFLAGS += -O2 -I.
 CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums 
 CFLAGS += -Wall -Wstrict-prototypes
@@ -29,7 +25,7 @@ SRC += $(TARGET).c
 OBJ = $(SRC:.c=.o) 
 OBJ = $(SRC:.S=.o)
 
-$(TARGET).o: librfm.h pins.h spi.h types.h utils.h Makefile
+$(TARGET).o: librfm.h utils.h Makefile
 
 all: $(TARGET).a
 	
