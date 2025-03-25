@@ -97,19 +97,19 @@ void _rfmDelay5(void);
 
 /**
  * Turns the radio on by pulling its reset pin LOW.
- * PORT_RFM &= ~(1 << PIN_RRST);
+ * PORTB &= ~(1 << PB0);
  */
 void _rfmOn(void);
 
 /**
  * Selects the radio to talk to via SPI.
- * PORT_RFM &= ~(1 << PIN_RCS);
+ * PORTB &= ~(1 << PB1);
  */
 void _rfmSel(void);
 
 /**
  * Deselects the radio to talk to via SPI.
- * PORT_RFM |= (1 << PIN_RCS);
+ * PORTB |= (1 << PB1);
  */
 void _rfmDes(void);
 

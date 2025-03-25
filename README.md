@@ -1,4 +1,4 @@
-# AVRRFM
+# librfm
 
 ## About
 

@@ -18,15 +18,13 @@
   </sourceRootList>
   <projectmakefile>/home/dode/dev/librfm/Makefile</projectmakefile>
   <confs>
-    <conf name="Custom" type="3">
+    <conf name="Custom" type="1">
       <toolsSet>
         <compilerSet>AVR|GNU</compilerSet>
         <dependencyChecking>false</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
-        <archiverTool>
-        </archiverTool>
       </compileType>
       <item path="/home/dode/dev/librfm/librfm.c" ex="false" tool="0" flavor2="0">
       </item>
