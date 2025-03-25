@@ -16,8 +16,11 @@ simple wire antennas as well as the reliable packet transmission.
 ## Usage
 
 1. Include `librfm.h` and `librfm.a` in the project
-2. To make the library device and CPU frequency independent, the
-`_rfm*` functions in `librfm.h` must be implemented in the application
+2. Implement the `_rfm*` functions in `librfm.h` in the application
+(this is to make the library device and CPU frequency independent)
+3. Route interrupts occurring on `DIO0` to `rfmInt()`
+4. For timeouts to work, call `rfmTimer()` (from a timer) at about 30 Hz 
+(TODO: make configurable)
 
 ## Range
 
@@ -31,7 +34,7 @@ antennas. What would be the range with +20 dBm and decent antennas?
 ## Susceptibility to Temperature Changes
 
 With the default frequency deviation of 5 kHz and receiver bandwidth of 
-10.4 kHz, packet transmission is very unreliable and fails completely for me; 
+10.4 kHz, packet transmission is very unreliable and fails completely for me 
 when the temperature of the transmitter is below 10°C and above 40°C, while 
 the receiver temperature is at 20°C. The receiver does not seem to be prone to 
 temperature changes.  
