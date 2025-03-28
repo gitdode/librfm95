@@ -18,9 +18,7 @@ simple wire antennas as well as the reliable packet transmission.
 1. Include `librfm.h` and `librfm.a` in the project
 2. Implement the `_rfm*` functions in `librfm.h` in the application
 (this is to make the library device and CPU frequency independent)
-3. Route interrupts occurring on `DIO0` to `rfmInt()`
-4. For timeouts to work, call `rfmTimer()` (from a timer) at about 30 Hz 
-(TODO: make configurable)
+3. Route interrupts occurring on `DIO0` and `DIO4` to `rfmIrq()`
 
 ## Range
 
