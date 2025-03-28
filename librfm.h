@@ -34,8 +34,8 @@
 #define DIO_MAP2    0x26
 #define IRQ_FLAGS1  0x27
 #define RSSI_THRESH 0x29
-#define RX_TIMEOUT1 0x2a
-#define RX_TIMEOUT2 0x2b
+#define RX_TO_RSSI  0x2a
+#define RX_TO_PRDY  0x2b
 #define PREAMB_MSB  0x2c
 #define PREAMB_LSB  0x2d
 #define IRQ_FLAGS2  0x28
@@ -69,6 +69,7 @@
 #define MODE_TX     0x0c
 #define MODE_RX     0x10
 
+#define PA_OFF      18
 #define PA_MIN      16
 #define PA_MAX      31
 
@@ -76,15 +77,13 @@
 #define F_STEP          6103515625ULL
 #define CAST_ADDRESS    0x84
 
-#define TIMEOUT_INTS    3  // about 100 milliseconds @ 30 Hz
-#define MAX_TIMEOUTS    9  // slow down tx attempts after so many timeouts
-
 /**
  * Flags for "payload ready" event.
  */
 typedef struct {
     bool ready;
     bool crc;
+    uint8_t rssi;
 } PayloadFlags;
 
 /**
@@ -128,17 +127,10 @@ uint8_t _rfmTx(uint8_t data);
 void rfmInit(uint64_t freq, uint8_t node);
 
 /**
- * Should be called when a radio interrupt occurred, i.e. 'PayloadReady'.
+ * Reads interrupt flags. Should be called when any interrupt occurs 
+ * on DIO0 or DIO4.
  */
-void rfmInt(void);
-
-/**
- * Gives a timer pulse to the radio. Used to time-out blocking functions,
- * i.e. transmitter waiting for a response from the receiver.
- * TIMEOUT_INTS must be adjusted according to the frequency with that 
- * this function is called.
- */
-void rfmTimer(void);
+void rfmIrq(void);
 
 /**
  * Shuts down the radio.
@@ -158,25 +150,19 @@ void rfmWake(void);
 void rfmSetNodeAddress(uint8_t address);
 
 /**
- * Returns the current RSSI value.
+ * Sets the output power to -2 to +13 dBm. 
+ * Values outside that range are ignored.
  * 
- * @return rssi value
+ * @param dBm ouput power
  */
-uint8_t rfmGetRssi(void);
+void rfmSetOutputPower(int8_t dBm);
 
 /**
- * Sets the output power based on the given receiver RSSI.
- * 
- * @param rssi
- */
-void rfmSetOutputPower(uint8_t rssi);
-
-/**
- * Returns the current output power setting.
+ * Returns the current output power setting in dBm.
  *
  * @return ouput power
  */
-uint8_t rfmGetOutputPower(void);
+int8_t rfmGetOutputPower(void);
 
 /**
  * Sets the radio to receive mode and maps "PayloadReady" to DIO0.

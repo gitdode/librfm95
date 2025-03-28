@@ -10,8 +10,6 @@
 
 static volatile uint8_t irqFlags1 = 0;
 static volatile uint8_t irqFlags2 = 0;
-static volatile uint8_t timeoutInts = 0;
-static volatile bool timeoutEnabled = false;
 
 /**
  * Writes the given value to the given register.
@@ -57,20 +55,21 @@ static void clearIrqFlags(void) {
 }
 
 /**
- * Enables timeout (sets timeout interrupt flag on expiration).
+ * Enables or disables timeouts.
  *
  * @param enable
  */
 static void timeoutEnable(bool enable) {
-    timeoutEnabled = enable;
-    if (!enable) timeoutInts = 0;
-}
-
-/**
- * Times out the current operation.
- */
-static void timeout(void) {
-    irqFlags1 |= (1 << 2);
+    if (enable) {
+        // get "Timeout" on DIO4 (default)
+        regWrite(DIO_MAP2, 0x00);
+        // both sum up to about 100 ms
+        regWrite(RX_TO_RSSI, 0x1f);
+        regWrite(RX_TO_PRDY, 0x1f);
+    } else {
+        regWrite(RX_TO_RSSI, 0x00);
+        regWrite(RX_TO_PRDY, 0x00);
+    }
 }
 
 void rfmInit(uint64_t freq, uint8_t node) {
@@ -135,7 +134,7 @@ void rfmInit(uint64_t freq, uint8_t node) {
 
     // Preamble size
     regWrite(PREAMB_MSB, 0x00);
-    regWrite(PREAMB_LSB, 0x0f);
+    regWrite(PREAMB_LSB, 0x03);
 
     // turn off CLKOUT (not used)
     regWrite(DIO_MAP2, 0x07);
@@ -183,19 +182,9 @@ void rfmInit(uint64_t freq, uint8_t node) {
     // printString("Radio init done\r\n");
 }
 
-/**
- * Reads interrupt flags when a radio interrupt occurs.
- */
-void rfmInt(void) {
+void rfmIrq(void) {
     irqFlags1 = regRead(IRQ_FLAGS1);
     irqFlags2 = regRead(IRQ_FLAGS2);
-}
-
-void rfmTimer(void) {
-    if (timeoutEnabled && timeoutInts++ >= TIMEOUT_INTS) {
-        timeoutEnable(false);
-        timeout();
-    }
 }
 
 void rfmSleep(void) {
@@ -212,20 +201,15 @@ void rfmSetNodeAddress(uint8_t address) {
     regWrite(NODE_ADDR, address);
 }
 
-uint8_t rfmGetRssi(void) {
-    return regRead(RSSI_VALUE);
-}
-
-// TODO make pure setter
-void rfmSetOutputPower(uint8_t rssi) {
+void rfmSetOutputPower(int8_t dBm) {
     uint8_t pa = 0x40; // -18 dBm with PA1
     // adjust power from -2 to +13 dBm
-    pa += min(max(rssi - 69, PA_MIN), PA_MAX);
+    pa |= (min(max(dBm + PA_OFF, PA_MIN), PA_MAX)) & 0x1f;
     regWrite(PA_LEVEL, pa);
 }
 
-uint8_t rfmGetOutputPower(void) {
-    return regRead(PA_LEVEL);
+int8_t rfmGetOutputPower(void) {
+    return (regRead(PA_LEVEL) & 0x1f) - PA_OFF;
 }
 
 void rfmStartReceive(void) {
@@ -236,11 +220,13 @@ void rfmStartReceive(void) {
 }
 
 PayloadFlags rfmPayloadReady(void) {
-    PayloadFlags flags = {.ready = false, .crc = false};
+    PayloadFlags flags = {.ready = false, .rssi = 255, .crc = false};
     if (irqFlags2 & (1 << 2)) {
-        flags.ready = true;
-        flags.crc = irqFlags2 & (1 << 1);
         clearIrqFlags();
+
+        flags.ready = true;
+        flags.rssi = regRead(RSSI_VALUE);
+        flags.crc = regRead(IRQ_FLAGS2) & (1 << 1);
         setMode(MODE_STDBY);
     }
 
@@ -268,7 +254,7 @@ size_t rfmReceivePayload(uint8_t *payload, size_t size, bool timeout) {
     timeoutEnable(timeout);
     rfmStartReceive();
 
-    // wait until "PayloadReady" or timeout
+    // wait until "PayloadReady" or "Timeout"
     do {} while (!(irqFlags2 & (1 << 2)) && !(irqFlags1 & (1 << 2)));
     bool ready = irqFlags2 & (1 << 2);
     bool timedout = irqFlags1 & (1 << 2);
@@ -277,10 +263,11 @@ size_t rfmReceivePayload(uint8_t *payload, size_t size, bool timeout) {
     if (ready) {
         timeoutEnable(false);
     }
+
     setMode(MODE_STDBY);
 
     if (timedout) {
-        // full power as last resort
+        // full power as last resort, indicate timeout
         regWrite(PA_LEVEL, 0x5f);
 
         return 0;
