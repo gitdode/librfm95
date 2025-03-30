@@ -5,14 +5,14 @@
 Static avr-libc library providing basic support for RFM95 radio modules.
 Other RFM9x radios should work as well, but were not tested yet.  
 
-This is work in progress. Simple Tx-Rx with response works so far.  
+This is work in progress. Simple Tx-Rx with response in FSK mode works so far.  
 
 I'm impressed how well these radio modules work; the range achieved with 
 simple wire antennas as well as the reliable packet transmission.  
 
 ## TODO
 
-- Add support for LoRa
+- Add support for LoRa mode
 
 ## Usage
 
