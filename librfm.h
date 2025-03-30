@@ -102,8 +102,8 @@ typedef struct {
 void _rfmDelay5(void);
 
 /**
- * Turns the radio on by pulling its reset pin LOW.
- * PORTB &= ~(1 << PB0);
+ * Turns the radio on by pulling its reset pin high.
+ * PORTB |= (1 << PB0);
  */
 void _rfmOn(void);
 
