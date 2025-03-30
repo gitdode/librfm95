@@ -2,7 +2,8 @@
 
 ## About
 
-Static avr-libc library providing basic support for RFM69 radio modules.  
+Static avr-libc library providing basic support for RFM95 radio modules.
+Other RFM9x radios should work as well, but were not tested yet.  
 
 This is work in progress. Simple Tx-Rx with response works so far.  
 
@@ -11,7 +12,7 @@ simple wire antennas as well as the reliable packet transmission.
 
 ## TODO
 
-- Add support for RFM9x (LoRa)
+- Add support for LoRa
 
 ## Usage
 
@@ -29,7 +30,9 @@ antennas. What would be the range with +20 dBm and decent antennas?
 
 ![FieldTest3](https://github.com/user-attachments/assets/f2289f8e-1f81-4b85-9146-07c2ce1bb563)
 
-## Susceptibility to Temperature Changes
+## Susceptibility to Temperature Changes*
+
+*This originates from RFM69 radios, if it applies also to RFM9x is yet to be tested.  
 
 With the default frequency deviation of 5 kHz and receiver bandwidth of 
 10.4 kHz, packet transmission is very unreliable and fails completely for me 
