@@ -145,7 +145,7 @@ bool rfmInit(uint64_t freq, uint8_t node) {
     regWrite(PREA_MSB, 0x00);
     regWrite(PREA_LSB, 0x03);
 
-    // AutoRestartRxMode off, PreamblePolarity 0xaa, SyncOn on,
+    // AutoRestartRxMode off, PreamblePolarity 0xaa, SyncOn,
     // FifoFillCondition if SyncAddress, SyncSize + 1 = 4 bytes
     regWrite(SYNC_CONFIG, 0x13);
 
@@ -211,7 +211,7 @@ void rfmSetOutputPower(int8_t dBm) {
 }
 
 int8_t rfmGetOutputPower(void) {
-    return (regRead(PA_CONFIG) & 0x1f) - PA_OFF;
+    return (regRead(PA_CONFIG) & 0x0f) + PA_OFF;
 }
 
 void rfmStartReceive(void) {

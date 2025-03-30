@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <df root="/home/dode/dev/librfm" name="0">
+    <df root="/home/dode/dev/librfm95" name="0">
       <in>librfm.c</in>
     </df>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
                    projectFiles="false"
                    kind="IMPORTANT_FILES_FOLDER">
-      <itemPath>/home/dode/dev/librfm/Makefile</itemPath>
-      <itemPath>/home/dode/dev/librfm/nbproject/private/launcher.properties</itemPath>
+      <itemPath>/home/dode/dev/librfm95/Makefile</itemPath>
+      <itemPath>/home/dode/dev/librfm95/nbproject/private/launcher.properties</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
   <sourceRootList>
-    <Elem>/home/dode/dev/librfm</Elem>
+    <Elem>/home/dode/dev/librfm95</Elem>
   </sourceRootList>
-  <projectmakefile>/home/dode/dev/librfm/Makefile</projectmakefile>
+  <projectmakefile>/home/dode/dev/librfm95/Makefile</projectmakefile>
   <confs>
     <conf name="Custom" type="1">
       <toolsSet>
@@ -26,7 +26,7 @@
       </toolsSet>
       <compileType>
       </compileType>
-      <item path="/home/dode/dev/librfm/librfm.c" ex="false" tool="0" flavor2="0">
+      <item path="/home/dode/dev/librfm95/librfm.c" ex="false" tool="0" flavor2="0">
       </item>
     </conf>
   </confs>
