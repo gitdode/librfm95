@@ -61,14 +61,14 @@ static void clearIrqFlags(void) {
  */
 static void timeoutEnable(bool enable) {
     if (enable) {
-        // get "Timeout" on DIO4 (default)
-        regWrite(DIO_MAP2, regRead(DIO_MAP2) & ~0xc0);
+        // get "Timeout" on DIO4
+        regWrite(DIO_MAP2, (regRead(DIO_MAP2) | 0x80) & ~0x40);
         // both sum up to about 100 ms
         regWrite(RX_TO_RSSI, 0x1f);
-        regWrite(RX_TO_PRDY, 0x1f);
+        regWrite(RX_TO_PREA, 0x1f);
     } else {
         regWrite(RX_TO_RSSI, 0x00);
-        regWrite(RX_TO_PRDY, 0x00);
+        regWrite(RX_TO_PREA, 0x00);
     }
 }
 
@@ -77,20 +77,20 @@ bool rfmInit(uint64_t freq, uint8_t node) {
     _rfmDelay5();
     _rfmDelay5();
 
-    // pull reset LOW to turn on the module
+    // pull reset high to turn on the module
     _rfmOn();
 
     _rfmDelay5();
 
-    uint8_t version = regRead(0x10);
+    uint8_t version = regRead(VERSION);
     // printString("Version: ");
     // printHex(version);
     if (version == 0x00) {
         return false;
     }
 
-    // packet mode, FSK modulation, no shaping (default)
-    regWrite(DATA_MOD, 0x00);
+    // FSK modulation, high frequency mode, sleep mode
+    regWrite(OP_MODE, 0x00);
 
     // bit rate 9.6 kBit/s
     // regWrite(BITRATE_MSB, 0x0d);
@@ -102,55 +102,52 @@ bool rfmInit(uint64_t freq, uint8_t node) {
     regWrite(FDEV_MSB, 0x00);
     regWrite(FDEV_LSB, 0xa4);
 
-    // RC calibration, automatically done at device power-up
-    // regWrite(OSC1, 0x80);
-    // do { } while (!(regRead(OSC1) & 0x40));
-
-    // PA level (default +13 dBm with PA0, yields very weak output power, why?)
-    // regWrite(PA_LEVEL, 0x9f);
-    // +13 dBm on PA1, yields the expected output power
-    regWrite(PA_LEVEL, 0x5f);
-    // +17 dBm - doesn't seem to work just like that?
-    // regWrite(PA_LEVEL, 0x7f);
-
-    // LNA 200 Ohm, gain AGC (default)
-    regWrite(LNA, 0x88);
-    // LNA 50 Ohm, gain AGC
-    // regWrite(LNA, 0x08);
-
-    // LNA high sensitivity mode
-    // regWrite(TEST_LNA, 0x2d);
-
-    // freq of DC offset canceller and channel filter bandwith (default 10.4 kHz)
-    // increasing to 20.8 kHz in connection with setting FDEV_*SB to 10 kHz
-    // completely removes susceptibility to temperature changes
-    regWrite(RX_BW, 0x54);
-
-    // RX_BW during AFC (default 0x8b)
-    regWrite(AFC_BW, 0x54);
-
-    // AFC auto on
-    // regWrite(AFC_FEI, 0x04);
-
-    // RSSI threshold (default, POR 0xff)
-    regWrite(RSSI_THRESH, 0xe4);
-
-    // Preamble size
-    regWrite(PREAMB_MSB, 0x00);
-    regWrite(PREAMB_LSB, 0x03);
-
-    // turn off CLKOUT (not used)
-    regWrite(DIO_MAP2, 0x07);
-
-    // set the carrier frequency
-    uint32_t frf = freq * 100000000000ULL / F_STEP;
+        // set the carrier frequency
+    uint32_t frf = freq * 1000000ULL / F_STEP;
     regWrite(FRF_MSB, frf >> 16);
     regWrite(FRF_MID, frf >> 8);
     regWrite(FRF_LSB, frf >> 0);
 
-    // enable sync word generation and detection, FIFO fill on sync address,
-    // 4 bytes sync word, tolerate 3 bit errors
-    regWrite(SYNC_CONF, 0x9b);
+    // PA level +17 dBm with PA_BOOST pin (Pmax default/not relevant)
+    regWrite(PA_CONFIG, 0xcf);
+
+    // LNA highest gain, no current adjustment
+    regWrite(LNA, 0x20);
+
+    // AgcAutoOn, receiver trigger event PreambleDetect
+    regWrite(RX_CONFIG, 0x0e);
+
+    // no RSSI offset, 8 samples used
+    regWrite(RSSI_CONFIG, 0x02);
+
+    // 10 dB threshold for interferer detection
+    regWrite(RSSI_COLLIS, 0x0a);
+
+    // RSSI threshold (POR 0xff)
+    regWrite(RSSI_THRESH, 0x94);
+
+    // channel filter bandwith (default 10.4 kHz)
+    // increasing to 20.8 kHz in connection with setting FDEV_*SB to 10 kHz
+    // completely removes susceptibility to temperature changes
+    regWrite(RX_BW, 0x14);
+
+    // RX_BW during AFC
+    regWrite(AFC_BW, 0x14);
+
+    // AFC auto on
+    // regWrite(AFC_FEI, 0x00);
+
+    // PreambleDetectorOn, PreambleDetectorSize 2 bytes,
+    // PreambleDetectorTol 4 chips per bit
+    regWrite(PREA_DETECT, 0xaa);
+
+    // Preamble size
+    regWrite(PREA_MSB, 0x00);
+    regWrite(PREA_LSB, 0x03);
+
+    // AutoRestartRxMode off, PreamblePolarity 0xaa, SyncOn on,
+    // FifoFillCondition if SyncAddress, SyncSize + 1 = 4 bytes
+    regWrite(SYNC_CONFIG, 0x13);
 
     // just set all sync word values to some really creative value
     regWrite(SYNC_VAL1, 0x2f);
@@ -162,15 +159,15 @@ bool rfmInit(uint64_t freq, uint8_t node) {
     regWrite(SYNC_VAL7, 0x35);
     regWrite(SYNC_VAL8, 0x36);
 
-    // variable payload length, crc on, no address matching
-    // regWrite(PCK_CFG1, 0x90);
+    // variable payload length, DcFree none, CrcOn, CrcAutoClearOff,
     // match broadcast or node address
-    // regWrite(PCK_CFG1, 0x94);
-    // + CrcAutoClearOff
-    regWrite(PCK_CFG1, 0x9c);
+    regWrite(PCK_CONFIG1, 0x9c);
 
-    // disable automatic RX restart
-    regWrite(PCK_CFG2, 0x00);
+    // Packet mode, ..., PayloadLength(10:8)
+    regWrite(PCK_CONFIG2, 0x40);
+
+    // PayloadLength(7:0)
+    regWrite(PAYLOAD_LEN, 0x40);
 
     // node and broadcast address
     regWrite(NODE_ADDR, node);
@@ -179,8 +176,8 @@ bool rfmInit(uint64_t freq, uint8_t node) {
     // set TX start condition to "at least one byte in FIFO"
     regWrite(FIFO_THRESH, 0x8f);
 
-    // Fading Margin Improvement, improved margin, use if AfcLowBetaOn=0
-    regWrite(TEST_DAGC, 0x30);
+    // AutoImageCalOn disabled, TempThreshold 10°C, TempMonitorOff 0
+    regWrite(IMAGE_CAL, 0x02);
 
     // printString("Radio init done\r\n");
 
@@ -207,19 +204,19 @@ void rfmSetNodeAddress(uint8_t address) {
 }
 
 void rfmSetOutputPower(int8_t dBm) {
-    uint8_t pa = 0x40; // -18 dBm with PA1
-    // adjust power from -2 to +13 dBm
-    pa |= (min(max(dBm + PA_OFF, PA_MIN), PA_MAX)) & 0x1f;
-    regWrite(PA_LEVEL, pa);
+    uint8_t pa = 0xc0; // +2 dBm with PA_BOOST
+    // adjust power from 2 to +17 dBm
+    pa |= (min(max(dBm - PA_OFF, PA_MIN), PA_MAX)) & 0x0f;
+    regWrite(PA_CONFIG, pa);
 }
 
 int8_t rfmGetOutputPower(void) {
-    return (regRead(PA_LEVEL) & 0x1f) - PA_OFF;
+    return (regRead(PA_CONFIG) & 0x1f) - PA_OFF;
 }
 
 void rfmStartReceive(void) {
     // get "PayloadReady" on DIO0
-    regWrite(DIO_MAP1, (regRead(DIO_MAP1) & ~0x80) | 0x40);
+    regWrite(DIO_MAP1, regRead(DIO_MAP1) & ~0xc0);
 
     setMode(MODE_RX);
 }
@@ -273,7 +270,7 @@ size_t rfmReceivePayload(uint8_t *payload, size_t size, bool timeout) {
 
     if (timedout) {
         // full power as last resort, indicate timeout
-        regWrite(PA_LEVEL, 0x5f);
+        regWrite(PA_CONFIG, 0xcf);
 
         return 0;
     }
