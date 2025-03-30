@@ -72,7 +72,7 @@ static void timeoutEnable(bool enable) {
     }
 }
 
-void rfmInit(uint64_t freq, uint8_t node) {
+bool rfmInit(uint64_t freq, uint8_t node) {
     // wait a bit after power on
     _rfmDelay5();
     _rfmDelay5();
@@ -82,9 +82,12 @@ void rfmInit(uint64_t freq, uint8_t node) {
 
     _rfmDelay5();
 
-    // uint8_t version = regRead(0x10);
+    uint8_t version = regRead(0x10);
     // printString("Version: ");
     // printHex(version);
+    if (version == 0x00) {
+        return false;
+    }
 
     // packet mode, FSK modulation, no shaping (default)
     regWrite(DATA_MOD, 0x00);
@@ -180,6 +183,8 @@ void rfmInit(uint64_t freq, uint8_t node) {
     regWrite(TEST_DAGC, 0x30);
 
     // printString("Radio init done\r\n");
+
+    return true;
 }
 
 void rfmIrq(void) {

@@ -124,9 +124,11 @@ uint8_t _rfmTx(uint8_t data);
 
 /**
  * Initializes the radio module with the given carrier frequency in kilohertz
- * and node address.
+ * and node address. Returns true on success, false otherwise.
+ * 
+ * @return success
  */
-void rfmInit(uint64_t freq, uint8_t node);
+bool rfmInit(uint64_t freq, uint8_t node);
 
 /**
  * Reads interrupt flags. Should be called when any interrupt occurs 
