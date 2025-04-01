@@ -63,12 +63,14 @@ static void timeoutEnable(bool enable) {
     if (enable) {
         // get "Timeout" on DIO4
         regWrite(DIO_MAP2, (regRead(DIO_MAP2) | 0x80) & ~0x40);
-        // both sum up to about 100 ms
+        // TODO calculate - seems to be about 50, 75, 100ms
         regWrite(RX_TO_RSSI, 0x1f);
-        regWrite(RX_TO_PREA, 0x1f);
+        regWrite(RX_TO_PREA, 0x2f);
+        regWrite(RX_TO_SYNC, 0x3f);
     } else {
         regWrite(RX_TO_RSSI, 0x00);
         regWrite(RX_TO_PREA, 0x00);
+        regWrite(RX_TO_SYNC, 0x0f);
     }
 }
 
@@ -96,9 +98,7 @@ bool rfmInit(uint64_t freq, uint8_t node) {
     // regWrite(BITRATE_MSB, 0x0d);
     // regWrite(BITRATE_LSB, 0x05);
 
-    // frequency deviation (default 5 kHz) - increasing to 10 kHz
-    // completely removes susceptibility to temperature changes
-    // RX_BW must be increased accordingly
+    // frequency deviation 10 kHz (default 5 kHz)
     regWrite(FDEV_MSB, 0x00);
     regWrite(FDEV_LSB, 0xa4);
 
@@ -109,7 +109,7 @@ bool rfmInit(uint64_t freq, uint8_t node) {
     regWrite(FRF_LSB, frf >> 0);
 
     // PA level +17 dBm with PA_BOOST pin (Pmax default/not relevant)
-    regWrite(PA_CONFIG, 0xcf);
+    regWrite(PA_CONFIG, 0xff);
 
     // LNA highest gain, no current adjustment
     regWrite(LNA, 0x20);
@@ -117,8 +117,8 @@ bool rfmInit(uint64_t freq, uint8_t node) {
     // AgcAutoOn, receiver trigger event PreambleDetect
     regWrite(RX_CONFIG, 0x0e);
 
-    // no RSSI offset, 8 samples used
-    regWrite(RSSI_CONFIG, 0x02);
+    // no RSSI offset, 32 samples used
+    regWrite(RSSI_CONFIG, 0x04);
 
     // 10 dB threshold for interferer detection
     regWrite(RSSI_COLLIS, 0x0a);
@@ -126,9 +126,7 @@ bool rfmInit(uint64_t freq, uint8_t node) {
     // RSSI threshold (POR 0xff)
     regWrite(RSSI_THRESH, 0x94);
 
-    // channel filter bandwith (default 10.4 kHz)
-    // increasing to 20.8 kHz in connection with setting FDEV_*SB to 10 kHz
-    // completely removes susceptibility to temperature changes
+    // channel filter bandwith 20.8 kHz (default 10.4 kHz)
     regWrite(RX_BW, 0x14);
 
     // RX_BW during AFC
@@ -145,7 +143,7 @@ bool rfmInit(uint64_t freq, uint8_t node) {
     regWrite(PREA_MSB, 0x00);
     regWrite(PREA_LSB, 0x03);
 
-    // AutoRestartRxMode off, PreamblePolarity 0xaa, SyncOn on,
+    // AutoRestartRxMode off, PreamblePolarity 0xaa, SyncOn,
     // FifoFillCondition if SyncAddress, SyncSize + 1 = 4 bytes
     regWrite(SYNC_CONFIG, 0x13);
 
@@ -211,10 +209,12 @@ void rfmSetOutputPower(int8_t dBm) {
 }
 
 int8_t rfmGetOutputPower(void) {
-    return (regRead(PA_CONFIG) & 0x1f) - PA_OFF;
+    return (regRead(PA_CONFIG) & 0x0f) + PA_OFF;
 }
 
-void rfmStartReceive(void) {
+void rfmStartReceive(bool timeout) {
+    timeoutEnable(timeout);
+
     // get "PayloadReady" on DIO0
     regWrite(DIO_MAP1, regRead(DIO_MAP1) & ~0xc0);
 
@@ -253,8 +253,7 @@ size_t rfmReadPayload(uint8_t *payload, size_t size) {
 }
 
 size_t rfmReceivePayload(uint8_t *payload, size_t size, bool timeout) {
-    timeoutEnable(timeout);
-    rfmStartReceive();
+    rfmStartReceive(timeout);
 
     // wait until "PayloadReady" or "Timeout"
     do {} while (!(irqFlags2 & (1 << 2)) && !(irqFlags1 & (1 << 2)));
