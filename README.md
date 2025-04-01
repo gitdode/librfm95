@@ -23,7 +23,11 @@ simple wire antennas as well as the reliable packet transmission.
 
 ## Range
 
-Setting `RegPaConfig` to `0xff`, which gives +17 dBm with `PA_BOOST`, indoor 
-range is very good and in an actual "field" test, packet reception was still 
-reliable with an RSSI of about -125 dBm at almost 2.7 km distance - with simple 
-wire antennas. What would be the range with +20 dBm and decent antennas?  
+Setting `RegPaConfig` to `0xff`, which gives +17 dBm with `PA_BOOST`, reception stopped 
+with an RSSI of about -125 dBm at almost 2.7 km distance - with simple wire antennas, 
+and a low hill in between.  
+
+Compared to the [RFM69](https://github.com/gitdode/librfm) at +13 dBm, it does 
+make it a few hundred meters further  - seems fair enough!  
+
+![FieldTest4](https://github.com/user-attachments/assets/67f745c4-a47f-4cb1-a278-547a0b0e01e3)
