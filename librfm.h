@@ -142,6 +142,12 @@ bool rfmInit(uint64_t freq, uint8_t node);
 void rfmIrq(void);
 
 /**
+ * Sets the "Timeout" interrupt flag, allowing to "unlock" a possibly hanging 
+ * wait for either "PayloadReady" or "Timeout" by the radio.
+ */
+void rfmTimeout(void);
+
+/**
  * Shuts down the radio.
  */
 void rfmSleep(void);

@@ -102,7 +102,7 @@ bool rfmInit(uint64_t freq, uint8_t node) {
     regWrite(FDEV_MSB, 0x00);
     regWrite(FDEV_LSB, 0xa4);
 
-        // set the carrier frequency
+    // set the carrier frequency
     uint32_t frf = freq * 1000000ULL / F_STEP;
     regWrite(FRF_MSB, frf >> 16);
     regWrite(FRF_MID, frf >> 8);
@@ -187,6 +187,10 @@ void rfmIrq(void) {
     irqFlags2 = regRead(IRQ_FLAGS2);
 }
 
+void rfmTimeout(void) {
+    irqFlags1 |= (1 << 2);
+}
+
 void rfmSleep(void) {
     setMode(MODE_SLEEP);
 }
@@ -255,7 +259,7 @@ size_t rfmReadPayload(uint8_t *payload, size_t size) {
 size_t rfmReceivePayload(uint8_t *payload, size_t size, bool timeout) {
     rfmStartReceive(timeout);
 
-    // wait until "PayloadReady" or "Timeout"
+    // wait until "PayloadReady" or (forced) "Timeout"
     do {} while (!(irqFlags2 & (1 << 2)) && !(irqFlags1 & (1 << 2)));
     bool ready = irqFlags2 & (1 << 2);
     bool timedout = irqFlags1 & (1 << 2);
@@ -269,7 +273,7 @@ size_t rfmReceivePayload(uint8_t *payload, size_t size, bool timeout) {
 
     if (timedout) {
         // full power as last resort, indicate timeout
-        regWrite(PA_CONFIG, 0xcf);
+        regWrite(PA_CONFIG, 0xff);
 
         return 0;
     }
