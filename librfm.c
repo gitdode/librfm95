@@ -8,8 +8,9 @@
 #include "librfm.h"
 #include "utils.h"
 
-static volatile uint8_t irqFlags1 = 0;
-static volatile uint8_t irqFlags2 = 0;
+static volatile bool packetSent = false;
+static volatile bool payloadReady = false;
+static volatile bool timeout = false;
 
 /**
  * Writes the given value to the given register.
@@ -47,14 +48,6 @@ static void setMode(uint8_t mode) {
 }
 
 /**
- * Clears the IRQ flags read from the module.
- */
-static void clearIrqFlags(void) {
-    irqFlags1 = 0;
-    irqFlags2 = 0;
-}
-
-/**
  * Enables or disables timeouts.
  *
  * @param enable
@@ -63,6 +56,7 @@ static void timeoutEnable(bool enable) {
     if (enable) {
         // get "Timeout" on DIO4
         regWrite(DIO_MAP2, (regRead(DIO_MAP2) | 0x80) & ~0x40);
+        timeout = false;
         // TODO calculate - seems to be about 50, 75, 100ms
         regWrite(RX_TO_RSSI, 0x1f);
         regWrite(RX_TO_PREA, 0x2f);
@@ -70,7 +64,7 @@ static void timeoutEnable(bool enable) {
     } else {
         regWrite(RX_TO_RSSI, 0x00);
         regWrite(RX_TO_PREA, 0x00);
-        regWrite(RX_TO_SYNC, 0x0f);
+        regWrite(RX_TO_SYNC, 0x00);
     }
 }
 
@@ -183,15 +177,20 @@ bool rfmInit(uint64_t freq, uint8_t node) {
 }
 
 void rfmIrq(void) {
-    irqFlags1 = regRead(IRQ_FLAGS1);
-    irqFlags2 = regRead(IRQ_FLAGS2);
+    uint8_t irqFlags1 = regRead(IRQ_FLAGS1);
+    uint8_t irqFlags2 = regRead(IRQ_FLAGS2);
+
+    if (irqFlags1 & (1 << 2)) timeout = true;
+    if (irqFlags2 & (1 << 3)) packetSent = true;
+    if (irqFlags2 & (1 << 2)) payloadReady = true;
 }
 
 void rfmTimeout(void) {
-    irqFlags1 |= (1 << 2);
+    timeout = true;
 }
 
 void rfmSleep(void) {
+    _rfmDelay5();
     setMode(MODE_SLEEP);
 }
 
@@ -221,15 +220,14 @@ void rfmStartReceive(bool timeout) {
 
     // get "PayloadReady" on DIO0
     regWrite(DIO_MAP1, regRead(DIO_MAP1) & ~0xc0);
+    payloadReady = false;
 
     setMode(MODE_RX);
 }
 
 PayloadFlags rfmPayloadReady(void) {
     PayloadFlags flags = {.ready = false, .rssi = 255, .crc = false};
-    if (irqFlags2 & (1 << 2)) {
-        clearIrqFlags();
-
+    if (payloadReady) {
         flags.ready = true;
         flags.rssi = regRead(RSSI_VALUE);
         flags.crc = regRead(IRQ_FLAGS2) & (1 << 1);
@@ -256,22 +254,19 @@ size_t rfmReadPayload(uint8_t *payload, size_t size) {
     return len;
 }
 
-size_t rfmReceivePayload(uint8_t *payload, size_t size, bool timeout) {
-    rfmStartReceive(timeout);
+size_t rfmReceivePayload(uint8_t *payload, size_t size, bool enable) {
+    rfmStartReceive(enable);
 
     // wait until "PayloadReady" or (forced) "Timeout"
-    do {} while (!(irqFlags2 & (1 << 2)) && !(irqFlags1 & (1 << 2)));
-    bool ready = irqFlags2 & (1 << 2);
-    bool timedout = irqFlags1 & (1 << 2);
-    clearIrqFlags();
+    do {} while (!payloadReady && !timeout);
 
-    if (ready) {
+    if (payloadReady) {
         timeoutEnable(false);
     }
 
     setMode(MODE_STDBY);
 
-    if (timedout) {
+    if (timeout) {
         // full power as last resort, indicate timeout
         regWrite(PA_CONFIG, 0xff);
 
@@ -296,12 +291,12 @@ size_t rfmTransmitPayload(uint8_t *payload, size_t size, uint8_t node) {
 
     // get "PacketSent" on DIO0 (default)
     regWrite(DIO_MAP1, regRead(DIO_MAP1) & ~0xc0);
+    packetSent = false;
 
     setMode(MODE_TX);
 
     // wait until "PacketSent"
-    do {} while (!(irqFlags2 & (1 << 3)));
-    clearIrqFlags();
+    do {} while (!packetSent);
 
     setMode(MODE_STDBY);
 
