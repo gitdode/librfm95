@@ -149,6 +149,44 @@ static bool initLoRa(uint8_t node) {
     // LoRa modulation, high frequency mode, sleep mode
     regWrite(RFM_OP_MODE, 0x00);
 
+    // SPI interface address pointer in FIFO data buffer (POR 0x00)
+    regWrite(RFM_LORA_FIFO_ADDR_PTR, 0x00);
+
+    // write base address in FIFO data buffer for TX modulator (POR 0x80)
+    regWrite(RFM_LORA_FIFO_TX_ADDR, 0x80);
+
+    // read base address in FIFO data buffer for RX demodulator (POR 0x00)
+    regWrite(RFM_LORA_FIFO_RX_ADDR, 0x00);
+
+    // signal bandwidth 125 kHz, error coding rate 4/5,
+    // implicit header mode off: explicit header mode
+    regWrite(RFM_LORA_MODEM_CONFIG1, 0x72);
+
+    // spreading factor (POR 128 chips/symbol), TX continuous mode
+    // (single packet), RX payload CRC on, RX timeout MSB
+    regWrite(RFM_LORA_MODEM_CONFIG2, 0x74);
+
+    // static node, AGC auto off
+    regWrite(RFM_LORA_MODEM_CONFIG3, 0x00);
+
+    // RX timeout LSB
+    regWrite(RFM_LORA_SYMB_TIMEO_LSB, 0x64);
+
+    // preamble length MSB
+    regWrite(RFM_LORA_PREA_LEN_MSB, 0x00);
+
+    // preamble length LSB
+    regWrite(RFM_LORA_PREA_LEN_LSB, 0x08);
+
+    // payload length in bytes (>0 only for implicit header mode)
+    regWrite(RFM_LORA_PAYLD_LEN, 0x01);
+
+    // max payload length (CRC error if exceeded)
+    regWrite(RFM_LORA_PAYLD_MAX_LEN, 0xff);
+
+    // frequency hopping disabled
+    regWrite(RFM_LORA_HOP_PERIOD, 0x00);
+
     return true;
 }
 
