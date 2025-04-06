@@ -12,77 +12,114 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define FIFO        0x00
-#define OP_MODE     0x01
-#define BITRATE_MSB 0x02
-#define BITRATE_LSB 0x03
-#define FDEV_MSB    0x04
-#define FDEV_LSB    0x05
-#define FRF_MSB     0x06
-#define FRF_MID     0x07
-#define FRF_LSB     0x08
-#define PA_CONFIG   0x09
-#define PA_RAMP     0x0a
-#define OCP         0x0b
-#define LNA         0x0c
-#define RX_CONFIG   0x0d
-#define RSSI_CONFIG 0x0e
-#define RSSI_COLLIS 0x0f
-#define RSSI_THRESH 0x10
-#define RSSI_VALUE  0x11
-#define RX_BW       0x12
-#define AFC_BW      0x13
-#define AFC_FEI     0x1a
-#define PREA_DETECT 0x1f
-#define RX_TO_RSSI  0x20
-#define RX_TO_PREA  0x21
-#define RX_TO_SYNC  0x22
-#define RX_DELAY    0x23
-#define OSC         0x24
-#define PREA_MSB    0x25
-#define PREA_LSB    0x26
-#define SYNC_CONFIG 0x27
-#define SYNC_VAL1   0x28
-#define SYNC_VAL2   0x29
-#define SYNC_VAL3   0x2a
-#define SYNC_VAL4   0x2b
-#define SYNC_VAL5   0x2c
-#define SYNC_VAL6   0x2d
-#define SYNC_VAL7   0x2e
-#define SYNC_VAL8   0x2f
-#define PCK_CONFIG1 0x30
-#define PCK_CONFIG2 0x31
-#define PAYLOAD_LEN 0x32
-#define NODE_ADDR   0x33
-#define CAST_ADDR   0x34
-#define FIFO_THRESH 0x35
-#define IMAGE_CAL   0x3b
-#define TEMP        0x3c
-#define LOW_BAT     0x3d
-#define IRQ_FLAGS1  0x3e
-#define IRQ_FLAGS2  0x3f
-#define DIO_MAP1    0x40
-#define DIO_MAP2    0x41
-#define VERSION     0x42
+/* Registers shared by FSK and LoRa mode */
+#define RFM_FIFO                0x00
+#define RFM_OP_MODE             0x01
+#define RFM_FRF_MSB             0x06
+#define RFM_FRF_MID             0x07
+#define RFM_FRF_LSB             0x08
+#define RFM_PA_CONFIG           0x09
+#define RFM_PA_RAMP             0x0a
+#define RFM_OCP                 0x0b
+#define RFM_LNA                 0x0c
+#define RFM_VERSION             0x42
 
-#define MASK_MODE   0x07
+/* FSK mode registers */
+#define RFM_FSK_BITRATE_MSB     0x02
+#define RFM_FSK_BITRATE_LSB     0x03
+#define RFM_FSK_FDEV_MSB        0x04
+#define RFM_FSK_FDEV_LSB        0x05
+#define RFM_FSK_RX_CONFIG       0x0d
+#define RFM_FSK_RSSI_CONFIG     0x0e
+#define RFM_FSK_RSSI_COLLIS     0x0f
+#define RFM_FSK_RSSI_THRESH     0x10
+#define RFM_FSK_RSSI_VALUE      0x11
+#define RFM_FSK_RX_BW           0x12
+#define RFM_FSK_AFC_BW          0x13
+#define RFM_FSK_AFC_FEI         0x1a
+#define RFM_FSK_PREA_DETECT     0x1f
+#define RFM_FSK_RX_TO_RSSI      0x20
+#define RFM_FSK_RX_TO_PREA      0x21
+#define RFM_FSK_RX_TO_SYNC      0x22
+#define RFM_FSK_RX_DELAY        0x23
+#define RFM_FSK_OSC             0x24
+#define RFM_FSK_PREA_MSB        0x25
+#define RFM_FSK_PREA_LSB        0x26
+#define RFM_FSK_SYNC_CONFIG     0x27
+#define RFM_FSK_SYNC_VAL1       0x28
+#define RFM_FSK_SYNC_VAL2       0x29
+#define RFM_FSK_SYNC_VAL3       0x2a
+#define RFM_FSK_SYNC_VAL4       0x2b
+#define RFM_FSK_SYNC_VAL5       0x2c
+#define RFM_FSK_SYNC_VAL6       0x2d
+#define RFM_FSK_SYNC_VAL7       0x2e
+#define RFM_FSK_SYNC_VAL8       0x2f
+#define RFM_FSK_PCK_CONFIG1     0x30
+#define RFM_FSK_PCK_CONFIG2     0x31
+#define RFM_FSK_PAYLOAD_LEN     0x32
+#define RFM_FSK_NODE_ADDR       0x33
+#define RFM_FSK_CAST_ADDR       0x34
+#define RFM_FSK_FIFO_THRESH     0x35
+#define RFM_FSK_IMAGE_CAL       0x3b
+#define RFM_FSK_TEMP            0x3c
+#define RFM_FSK_LOW_BAT         0x3d
+#define RFM_FSK_IRQ_FLAGS1      0x3e
+#define RFM_FSK_IRQ_FLAGS2      0x3f
+#define RFM_FSK_DIO_MAP1        0x40
+#define RFM_FSK_DIO_MAP2        0x41
 
-#define MODE_SLEEP  0x00
-#define MODE_STDBY  0x01
-#define MODE_FS_TX  0x02
-#define MODE_TX     0x03
-#define MODE_FS_RX  0x04
-#define MODE_RX     0x05
+/* LoRa mode registers */
+#define RFM_LORA_FIFO_ADDR_PTR  0x0d
+#define RFM_LORA_FIFO_TX_ADDR   0x0e
+#define RFM_LORA_FIFO_RX_ADDR   0x0f
+#define RFM_LORA_FIFO_CURR_ADDR 0x10
+#define RFM_LORA_IRQ_FLAGS_MASK 0x11
+#define RFM_LORA_IRQ_FLAGS      0x12
+#define RFM_LORA_RX_BYTES_NB    0x13
+#define RFM_LORA_RX_HDR_CNT_MSB 0x14
+#define RFM_LORA_RX_HDR_CNT_LSB 0x15
+#define RFM_LORA_RX_PCK_CNT_MSB 0x16
+#define RFM_LORA_RX_PCK_CNT_LSB 0x17
+#define RFM_LORA_MODEM_STAT     0x18
+#define RFM_LORA_PCK_SNR        0x19
+#define RFM_LORA_PCK_RSSI       0x1a
+#define RFM_LORA_RSSI           0x1b
+#define RFM_LORA_HOP_CHANNEL    0x1c
+#define RFM_LORA_MODEM_CONFIG1  0x1d
+#define RFM_LORA_MODEM_CONFIG2  0x1e
+#define RFM_LORA_SYMB_TIMEO_LSB 0x1f
+#define RFM_LORA_PREA_LEN_MSB   0x20
+#define RFM_LORA_PREA_LEN_LSB   0x21
+#define RFM_LORA_PAYLD_LEN      0x22
+#define RFM_LORA_PAYLD_MAX_LEN  0x23
+#define RFM_LORA_HOP_PERIOD     0x24
+#define RFM_LORA_FIFO_RX_B_ADDR 0x25
+#define RFM_LORA_MODEM_CONFIG3  0x26
 
-#define DBM_MIN     2
-#define DBM_MAX     17
-#define PA_MIN      0
-#define PA_MAX      15
-#define PA_OFF      2
+/* Values shared by FSK and LoRa mode */
+#define RFM_MODE_SLEEP          0x00
+#define RFM_MODE_STDBY          0x01
+#define RFM_MODE_FS_TX          0x02
+#define RFM_MODE_TX             0x03
+#define RFM_MODE_FS_RX          0x04
+#define RFM_MODE_RX             0x05
+#define RFM_MASK_MODE           0x07
 
-#define MESSAGE_SIZE    63
-#define F_STEP          61035
-#define CAST_ADDRESS    0x84
+#define RFM_F_STEP              61035
+#define RFM_CAST_ADDRESS        0x84
+
+#define RFM_DBM_MIN             2
+#define RFM_DBM_MAX             17
+#define RFM_PA_MIN              0
+#define RFM_PA_MAX              15
+#define RFM_PA_OFF              2
+
+/* FSK mode values */
+#define RFM_FSK_MSG_SIZE        63
+
+/* LoRa mode values */
+// assuming 50/50 for Tx/Rx for now
+#define RFM_LORA_MSG_SIZE       64 // TODO: header size?
 
 /**
  * Flags for "payload ready" event.
@@ -128,12 +165,13 @@ void _rfmDes(void);
 uint8_t _rfmTx(uint8_t data);
 
 /**
- * Initializes the radio module with the given carrier frequency in kilohertz
- * and node address. Returns true on success, false otherwise.
+ * Initializes the radio module in FSK or LoRa mode with the given carrier 
+ * frequency in kilohertz and node address. Returns true on success, 
+ * false otherwise.
  * 
  * @return success
  */
-bool rfmInit(uint64_t freq, uint8_t node);
+bool rfmInit(uint64_t freq, uint8_t node, bool lora);
 
 /**
  * Reads interrupt flags. Should be called when any interrupt occurs 
