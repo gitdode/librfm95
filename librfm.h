@@ -22,6 +22,8 @@
 #define RFM_PA_RAMP             0x0a
 #define RFM_OCP                 0x0b
 #define RFM_LNA                 0x0c
+#define RFM_DIO_MAP1            0x40
+#define RFM_DIO_MAP2            0x41
 #define RFM_VERSION             0x42
 
 /* FSK mode registers */
@@ -65,8 +67,6 @@
 #define RFM_FSK_LOW_BAT         0x3d
 #define RFM_FSK_IRQ_FLAGS1      0x3e
 #define RFM_FSK_IRQ_FLAGS2      0x3f
-#define RFM_FSK_DIO_MAP1        0x40
-#define RFM_FSK_DIO_MAP2        0x41
 
 /* LoRa mode registers */
 #define RFM_LORA_FIFO_ADDR_PTR  0x0d
@@ -264,6 +264,12 @@ size_t rfmReceivePayload(uint8_t *payload, size_t size, bool timeout);
  * @return payload bytes actually sent
  */
 size_t rfmTransmitPayload(uint8_t *payload, size_t size, uint8_t node);
+
+// TODO implement writing packet
+size_t rfmLoRaReceive(uint8_t *payload, size_t size);
+
+// TODO implement reading packet
+size_t rfmLoRaTransmit(uint8_t *payload, size_t size);
 
 #endif /* LIBRFM_H */
 

@@ -8,9 +8,15 @@
 #include "librfm.h"
 #include "utils.h"
 
-static volatile bool timeout = false;
-static volatile bool packetSent = false;
-static volatile bool payloadReady = false;
+/* FSK 'Timeout' */
+static volatile bool rxTimeout = false;
+/* FSK 'PacketSent' */
+static volatile bool txDone = false;
+/* FSK 'PayloadReady' */
+static volatile bool rxDone = false;
+
+/* Current mode: LoRa or FSK */
+static bool lora = false;
 
 /**
  * Writes the given value to the given register.
@@ -55,8 +61,8 @@ static void setMode(uint8_t mode) {
 static void timeoutEnable(bool enable) {
     if (enable) {
         // get "Timeout" on DIO4
-        regWrite(RFM_FSK_DIO_MAP2, (regRead(RFM_FSK_DIO_MAP2) | 0x80) & ~0x40);
-        timeout = false;
+        regWrite(RFM_DIO_MAP2, (regRead(RFM_DIO_MAP2) | 0x80) & ~0x40);
+        rxTimeout = false;
         // TODO calculate - seems to be about 50, 75, 100ms
         regWrite(RFM_FSK_RX_TO_RSSI, 0x1f);
         regWrite(RFM_FSK_RX_TO_PREA, 0x2f);
@@ -190,7 +196,9 @@ static bool initLoRa(uint8_t node) {
     return true;
 }
 
-bool rfmInit(uint64_t freq, uint8_t node, bool lora) {
+bool rfmInit(uint64_t freq, uint8_t node, bool _lora) {
+    lora = _lora;
+
     // wait a bit after power on
     _rfmDelay5();
     _rfmDelay5();
@@ -236,16 +244,27 @@ bool rfmInit(uint64_t freq, uint8_t node, bool lora) {
 }
 
 void rfmIrq(void) {
-    uint8_t irqFlags1 = regRead(RFM_FSK_IRQ_FLAGS1);
-    uint8_t irqFlags2 = regRead(RFM_FSK_IRQ_FLAGS2);
+    if (lora) {
+        uint8_t irqFlags = regRead(RFM_LORA_IRQ_FLAGS);
 
-    if (irqFlags1 & (1 << 2)) timeout = true;
-    if (irqFlags2 & (1 << 3)) packetSent = true;
-    if (irqFlags2 & (1 << 2)) payloadReady = true;
+        if (irqFlags & (1 << 7)) rxTimeout = true;
+        if (irqFlags & (1 << 3)) txDone = true;
+        if (irqFlags & (1 << 6)) rxDone = true;
+    } else {
+        uint8_t irqFlags1 = regRead(RFM_FSK_IRQ_FLAGS1);
+        uint8_t irqFlags2 = regRead(RFM_FSK_IRQ_FLAGS2);
+
+        if (irqFlags1 & (1 << 2)) rxTimeout = true;
+        if (irqFlags2 & (1 << 3)) txDone = true;
+        if (irqFlags2 & (1 << 2)) rxDone = true;
+    }
 }
 
 void rfmTimeout(void) {
-    timeout = true;
+    if (!lora) {
+        // workaround for https://electronics.stackexchange.com/q/743099/65699
+        rxTimeout = true;
+    }
 }
 
 void rfmSleep(void) {
@@ -260,7 +279,9 @@ void rfmWake(void) {
 }
 
 void rfmSetNodeAddress(uint8_t address) {
-    regWrite(RFM_FSK_NODE_ADDR, address);
+    if (!lora) {
+        regWrite(RFM_FSK_NODE_ADDR, address);
+    }
 }
 
 void rfmSetOutputPower(int8_t dBm) {
@@ -278,15 +299,15 @@ void rfmStartReceive(bool timeout) {
     timeoutEnable(timeout);
 
     // get "PayloadReady" on DIO0
-    regWrite(RFM_FSK_DIO_MAP1, regRead(RFM_FSK_DIO_MAP1) & ~0xc0);
-    payloadReady = false;
+    regWrite(RFM_DIO_MAP1, regRead(RFM_DIO_MAP1) & ~0xc0);
+    rxDone = false;
 
     setMode(RFM_MODE_RX);
 }
 
 PayloadFlags rfmPayloadReady(void) {
     PayloadFlags flags = {.ready = false, .rssi = 255, .crc = false};
-    if (payloadReady) {
+    if (rxDone) {
         flags.ready = true;
         flags.rssi = regRead(RFM_FSK_RSSI_VALUE);
         flags.crc = regRead(RFM_FSK_IRQ_FLAGS2) & (1 << 1);
@@ -317,15 +338,15 @@ size_t rfmReceivePayload(uint8_t *payload, size_t size, bool enable) {
     rfmStartReceive(enable);
 
     // wait until "PayloadReady" or (forced) "Timeout"
-    do {} while (!payloadReady && !timeout);
+    do {} while (!rxDone && !rxTimeout);
 
-    if (payloadReady) {
+    if (rxDone) {
         timeoutEnable(false);
     }
 
     setMode(RFM_MODE_STDBY);
 
-    if (timeout) {
+    if (rxTimeout) {
         // full power as last resort, indicate timeout
         regWrite(RFM_PA_CONFIG, 0xff);
 
@@ -349,13 +370,70 @@ size_t rfmTransmitPayload(uint8_t *payload, size_t size, uint8_t node) {
     _rfmDes();
 
     // get "PacketSent" on DIO0 (default)
-    regWrite(RFM_FSK_DIO_MAP1, regRead(RFM_FSK_DIO_MAP1) & ~0xc0);
-    packetSent = false;
+    regWrite(RFM_DIO_MAP1, regRead(RFM_DIO_MAP1) & ~0xc0);
+    txDone = false;
 
     setMode(RFM_MODE_TX);
 
     // wait until "PacketSent"
-    do {} while (!packetSent);
+    do {} while (!txDone);
+
+    setMode(RFM_MODE_STDBY);
+
+    return len;
+}
+
+size_t rfmLoRaReceive(uint8_t *payload, size_t size) {
+    // get "RxTimeout" on DIO1 and "RxDone" on DIO0
+    regWrite(RFM_DIO_MAP1, regRead(RFM_DIO_MAP1) & ~0xf0);
+    rxTimeout = false;
+    rxDone = false;
+
+    setMode(RFM_MODE_RX);
+
+    // wait until "RxDone" or "RxTimeout"
+    do {} while (!rxDone && !rxTimeout);
+
+    setMode(RFM_MODE_STDBY);
+
+    if (rxTimeout) {
+        // full power as last resort, indicate timeout
+        regWrite(RFM_PA_CONFIG, 0xff);
+
+        return 0;
+    }
+
+    size_t len = regRead(RFM_FIFO);
+    len = min(len, size);
+
+    _rfmSel();
+    _rfmTx(RFM_FIFO);
+    for (size_t i = 0; i < len; i++) {
+        payload[i] = _rfmTx(RFM_FIFO);
+    }
+    _rfmDes();
+
+    return len;
+}
+
+size_t rfmLoRaTransmit(uint8_t *payload, size_t size) {
+    size_t len = min(size, RFM_LORA_MSG_SIZE);
+
+    _rfmSel();
+    _rfmTx(RFM_FIFO | 0x80);
+    for (size_t i = 0; i < size; i++) {
+        _rfmTx(payload[i]);
+    }
+    _rfmDes();
+
+    // get "TxDone" on DIO0
+    regWrite(RFM_DIO_MAP1, (regRead(RFM_DIO_MAP1) & ~0x80) | 0x40);
+    txDone = false;
+
+    setMode(RFM_MODE_TX);
+
+    // wait until "TxDone"
+    do {} while (!txDone);
 
     setMode(RFM_MODE_STDBY);
 
