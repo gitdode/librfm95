@@ -152,9 +152,6 @@ static bool initFSK(uint8_t node) {
 }
 
 static bool initLoRa(uint8_t node) {
-    // LoRa modulation, high frequency mode, sleep mode
-    regWrite(RFM_OP_MODE, 0x00);
-
     // SPI interface address pointer in FIFO data buffer (POR 0x00)
     regWrite(RFM_LORA_FIFO_ADDR_PTR, 0x00);
 
@@ -164,12 +161,11 @@ static bool initLoRa(uint8_t node) {
     // read base address in FIFO data buffer for RX demodulator (POR 0x00)
     regWrite(RFM_LORA_FIFO_RX_ADDR, 0x00);
 
-    // signal bandwidth 125 kHz, error coding rate 4/5,
-    // implicit header mode off: explicit header mode
+    // signal bandwidth 125 kHz, error coding rate 4/5, explicit header mode
     regWrite(RFM_LORA_MODEM_CONFIG1, 0x72);
 
-    // spreading factor (POR 128 chips/symbol), TX continuous mode
-    // (single packet), RX payload CRC on, RX timeout MSB
+    // spreading factor (POR 128 chips/symbol), TX single packet mode,
+    // RX payload CRC on, RX timeout MSB
     regWrite(RFM_LORA_MODEM_CONFIG2, 0x74);
 
     // static node, AGC auto off
@@ -185,7 +181,7 @@ static bool initLoRa(uint8_t node) {
     regWrite(RFM_LORA_PREA_LEN_LSB, 0x08);
 
     // payload length in bytes (>0 only for implicit header mode)
-    regWrite(RFM_LORA_PAYLD_LEN, 0x01);
+    // regWrite(RFM_LORA_PAYLD_LEN, 0x01);
 
     // max payload length (CRC error if exceeded)
     regWrite(RFM_LORA_PAYLD_MAX_LEN, 0xff);
@@ -224,7 +220,7 @@ bool rfmInit(uint64_t freq, uint8_t node, bool _lora) {
     regWrite(RFM_PA_CONFIG, 0xff);
 
     // LNA highest gain, no current adjustment
-    regWrite(RFM_LNA, 0x20);
+    // regWrite(RFM_LNA, 0x20);
 
     if (lora) {
         // go to sleep before switching to LoRa mode
@@ -305,8 +301,8 @@ void rfmStartReceive(bool timeout) {
     setMode(RFM_MODE_RX);
 }
 
-PayloadFlags rfmPayloadReady(void) {
-    PayloadFlags flags = {.ready = false, .rssi = 255, .crc = false};
+RxFlags rfmPayloadReady(void) {
+    RxFlags flags = {.ready = false, .rssi = 255, .crc = false};
     if (rxDone) {
         flags.ready = true;
         flags.rssi = regRead(RFM_FSK_RSSI_VALUE);
@@ -383,27 +379,37 @@ size_t rfmTransmitPayload(uint8_t *payload, size_t size, uint8_t node) {
     return len;
 }
 
-size_t rfmLoRaReceive(uint8_t *payload, size_t size) {
-    // get "RxTimeout" on DIO1 and "RxDone" on DIO0
-    regWrite(RFM_DIO_MAP1, regRead(RFM_DIO_MAP1) & ~0xf0);
-    rxTimeout = false;
+void rfmLoRaStartRx(void) {
+    // clear "RxDone" interrupt
+    regWrite(RFM_LORA_IRQ_FLAGS, 0x40);
     rxDone = false;
 
+    // get "RxDone" on DIO0
+    regWrite(RFM_DIO_MAP1, regRead(RFM_DIO_MAP1) & ~0xc0);
+
+    // set FIFO address pointer to configured TX base address
+    regWrite(RFM_LORA_FIFO_ADDR_PTR, regRead(RFM_LORA_FIFO_RX_ADDR));
+
+    // TODO already is in continuous RX mode most of the time
     setMode(RFM_MODE_RX);
+}
 
-    // wait until "RxDone" or "RxTimeout"
-    do {} while (!rxDone && !rxTimeout);
-
-    setMode(RFM_MODE_STDBY);
-
-    if (rxTimeout) {
-        // full power as last resort, indicate timeout
-        regWrite(RFM_PA_CONFIG, 0xff);
-
-        return 0;
+RxFlags rfmLoRaRxDone(void) {
+    RxFlags flags = {.ready = false, .rssi = 255, .crc = false};
+    if (rxDone) {
+        flags.ready = true;
+        flags.rssi = 0; // TODO
+        flags.crc = 1; // TODO
     }
 
-    size_t len = regRead(RFM_FIFO);
+    return flags;
+}
+
+size_t rfmLoRaRxRead(uint8_t *payload, size_t size) {
+    // set FIFO address pointer to current RX address
+    regWrite(RFM_LORA_FIFO_ADDR_PTR, regRead(RFM_LORA_FIFO_CURR_ADDR));
+
+    size_t len = regRead(RFM_LORA_RX_BYTES_NB);
     len = min(len, size);
 
     _rfmSel();
@@ -416,12 +422,42 @@ size_t rfmLoRaReceive(uint8_t *payload, size_t size) {
     return len;
 }
 
-size_t rfmLoRaTransmit(uint8_t *payload, size_t size) {
+size_t rfmLoRaRx(uint8_t *payload, size_t size) {
+    // TODO required?
+    // clear "RxTimeout" and "RxDone" interrupt
+    // regWrite(RFM_LORA_IRQ_FLAGS, 0xc0);
+
+    // get "RxTimeout" on DIO1 and "RxDone" on DIO0
+    regWrite(RFM_DIO_MAP1, regRead(RFM_DIO_MAP1) & ~0xf0);
+    rxTimeout = false;
+    rxDone = false;
+
+    // set FIFO address pointer to configured TX base address
+    regWrite(RFM_LORA_FIFO_ADDR_PTR, regRead(RFM_LORA_FIFO_RX_ADDR));
+
+    setMode(RFM_MODE_RXSINGLE);
+
+    // wait until "RxDone" or "RxTimeout"
+    do {} while (!rxDone && !rxTimeout);
+
+    if (rxTimeout) {
+        return 0;
+    }
+
+    return rfmLoRaRxRead(payload, size);
+}
+
+size_t rfmLoRaTx(uint8_t *payload, size_t size) {
     size_t len = min(size, RFM_LORA_MSG_SIZE);
+
+    // set FIFO address pointer to configured TX base address
+    regWrite(RFM_LORA_FIFO_ADDR_PTR, regRead(RFM_LORA_FIFO_TX_ADDR));
+
+    regWrite(RFM_LORA_PAYLD_LEN, len);
 
     _rfmSel();
     _rfmTx(RFM_FIFO | 0x80);
-    for (size_t i = 0; i < size; i++) {
+    for (size_t i = 0; i < len; i++) {
         _rfmTx(payload[i]);
     }
     _rfmDes();
@@ -434,8 +470,6 @@ size_t rfmLoRaTransmit(uint8_t *payload, size_t size) {
 
     // wait until "TxDone"
     do {} while (!txDone);
-
-    setMode(RFM_MODE_STDBY);
 
     return len;
 }

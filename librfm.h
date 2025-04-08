@@ -102,7 +102,9 @@
 #define RFM_MODE_FS_TX          0x02
 #define RFM_MODE_TX             0x03
 #define RFM_MODE_FS_RX          0x04
-#define RFM_MODE_RX             0x05
+#define RFM_MODE_RX             0x05 // LoRa RXCONTINUOUS
+#define RFM_MODE_RXSINGLE       0x06 // LoRa only
+#define RFM_MODE_CAD            0x07 // LoRa only
 #define RFM_MASK_MODE           0x07
 
 #define RFM_F_STEP              61035
@@ -119,16 +121,16 @@
 
 /* LoRa mode values */
 // assuming 50/50 for Tx/Rx for now
-#define RFM_LORA_MSG_SIZE       64 // TODO: header size?
+#define RFM_LORA_MSG_SIZE       128
 
 /**
- * Flags for "payload ready" event.
+ * Flags for 'PayloadReady'/'RxDone' event.
  */
 typedef struct {
     bool ready;
     bool crc;
     uint8_t rssi;
-} PayloadFlags;
+} RxFlags;
 
 /**
  * F_CPU dependent delay of 5 milliseconds.
@@ -226,12 +228,12 @@ int8_t rfmGetOutputPower(void);
 void rfmStartReceive(bool timeout);
 
 /**
- * Returns true if a "PayloadReady" interrupt arrived and clears the
- * interrupt state.
+ * Returns true and puts the radio in standby mode if a "PayloadReady" 
+ * interrupt arrived.
  * 
- * @return true if "PayloadReady"
+ * @return flags
  */
-PayloadFlags rfmPayloadReady(void);
+RxFlags rfmPayloadReady(void);
 
 /**
  * Sets the radio in standby mode, puts the payload into the given array 
@@ -256,7 +258,7 @@ size_t rfmReadPayload(uint8_t *payload, size_t size);
 size_t rfmReceivePayload(uint8_t *payload, size_t size, bool timeout);
 
 /**
- * Transmits up to 64 bytes of the given payload with the given node address.
+ * Transmits up to 63 bytes of the given payload with the given node address.
  * 
  * @param payload to be sent
  * @param size of payload
@@ -265,11 +267,46 @@ size_t rfmReceivePayload(uint8_t *payload, size_t size, bool timeout);
  */
 size_t rfmTransmitPayload(uint8_t *payload, size_t size, uint8_t node);
 
-// TODO implement writing packet
-size_t rfmLoRaReceive(uint8_t *payload, size_t size);
+/**
+ * Sets the radio in continous receive mode and maps "RxDone" to DIO0.
+ */
+void rfmLoRaStartRx(void);
 
-// TODO implement reading packet
-size_t rfmLoRaTransmit(uint8_t *payload, size_t size);
+/**
+ * Returns true if a "RxDone" interrupt arrived.
+ * 
+ * @return flags
+ */
+RxFlags rfmLoRaRxDone(void);
+
+/**
+ * Puts the received payload into the given array with the given size, 
+ * and returns the length of the payload.
+ * 
+ * @param payload buffer for payload
+ * @param size of payload buffer
+ * @return payload bytes actually received
+ */
+size_t rfmLoRaRxRead(uint8_t *payload, size_t size);
+
+/**
+ * Sets the radio in single receive mode, waits for "RxDone" with timeout, 
+ * puts the payload into the given array with the given size, and returns 
+ * the length of the payload, or 0 if a timeout occurred.
+ * 
+ * @param payload buffer for payload
+ * @param size of payload buffer
+ * @return payload bytes actually received
+ */
+size_t rfmLoRaRx(uint8_t *payload, size_t size);
+
+/**
+ * Transmits up to 128 bytes of the given payload.
+ * 
+ * @param payload to be sent
+ * @param size of payload
+ * @return payload bytes actually sent
+ */
+size_t rfmLoRaTx(uint8_t *payload, size_t size);
 
 #endif /* LIBRFM_H */
-
