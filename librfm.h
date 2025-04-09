@@ -183,7 +183,8 @@ void rfmIrq(void);
 
 /**
  * Sets the "Timeout" interrupt flag, allowing to "unlock" a possibly hanging 
- * wait for either "PayloadReady" or "Timeout" by the radio.
+ * wait for either "PayloadReady" or "Timeout" by the radio in FSK mode, 
+ * ignored in LoRa mode.
  */
 void rfmTimeout(void);
 

@@ -54,11 +54,11 @@ static void setMode(uint8_t mode) {
 }
 
 /**
- * Enables or disables timeouts.
+ * Enables or disables timeouts in FSK mode.
  *
  * @param enable
  */
-static void timeoutEnable(bool enable) {
+static void timeoutEnableFSK(bool enable) {
     if (enable) {
         // get "Timeout" on DIO4
         regWrite(RFM_DIO_MAP2, (regRead(RFM_DIO_MAP2) | 0x80) & ~0x40);
@@ -161,18 +161,17 @@ static bool initLoRa(uint8_t node) {
     // read base address in FIFO data buffer for RX demodulator (POR 0x00)
     regWrite(RFM_LORA_FIFO_RX_ADDR, 0x00);
 
-    // signal bandwidth 125 kHz, error coding rate 4/5, explicit header mode
-    regWrite(RFM_LORA_MODEM_CONFIG1, 0x72);
+    // signal bandwidth 62.5 kHz, error coding rate 4/5, explicit header mode
+    regWrite(RFM_LORA_MODEM_CONFIG1, 0x62);
 
-    // spreading factor (POR 128 chips/symbol), TX single packet mode,
-    // RX payload CRC on, RX timeout MSB
-    regWrite(RFM_LORA_MODEM_CONFIG2, 0x74);
-
-    // static node, AGC auto off
-    regWrite(RFM_LORA_MODEM_CONFIG3, 0x00);
+    // spreading factor 9, TX single packet mode, CRC enable, RX timeout MSB
+    regWrite(RFM_LORA_MODEM_CONFIG2, 0x94);
 
     // RX timeout LSB
     regWrite(RFM_LORA_SYMB_TIMEO_LSB, 0x64);
+
+    // static node, AGC auto off
+    regWrite(RFM_LORA_MODEM_CONFIG3, 0x00);
 
     // preamble length MSB
     regWrite(RFM_LORA_PREA_LEN_MSB, 0x00);
@@ -220,7 +219,7 @@ bool rfmInit(uint64_t freq, uint8_t node, bool _lora) {
     regWrite(RFM_PA_CONFIG, 0xff);
 
     // LNA highest gain, no current adjustment
-    // regWrite(RFM_LNA, 0x20);
+    regWrite(RFM_LNA, 0x20);
 
     if (lora) {
         // go to sleep before switching to LoRa mode
@@ -258,7 +257,8 @@ void rfmIrq(void) {
 
 void rfmTimeout(void) {
     if (!lora) {
-        // workaround for https://electronics.stackexchange.com/q/743099/65699
+        // workaround for timeout interrupt sometimes not occurring in FSK mode
+        // https://electronics.stackexchange.com/q/743099/65699
         rxTimeout = true;
     }
 }
@@ -292,7 +292,7 @@ int8_t rfmGetOutputPower(void) {
 }
 
 void rfmStartReceive(bool timeout) {
-    timeoutEnable(timeout);
+    timeoutEnableFSK(timeout);
 
     // get "PayloadReady" on DIO0
     regWrite(RFM_DIO_MAP1, regRead(RFM_DIO_MAP1) & ~0xc0);
@@ -305,7 +305,7 @@ RxFlags rfmPayloadReady(void) {
     RxFlags flags = {.ready = false, .rssi = 255, .crc = false};
     if (rxDone) {
         flags.ready = true;
-        flags.rssi = regRead(RFM_FSK_RSSI_VALUE);
+        flags.rssi = divRoundNearest(regRead(RFM_FSK_RSSI_VALUE), 2);
         flags.crc = regRead(RFM_FSK_IRQ_FLAGS2) & (1 << 1);
         setMode(RFM_MODE_STDBY);
     }
@@ -337,7 +337,7 @@ size_t rfmReceivePayload(uint8_t *payload, size_t size, bool enable) {
     do {} while (!rxDone && !rxTimeout);
 
     if (rxDone) {
-        timeoutEnable(false);
+        timeoutEnableFSK(false);
     }
 
     setMode(RFM_MODE_STDBY);
@@ -380,8 +380,8 @@ size_t rfmTransmitPayload(uint8_t *payload, size_t size, uint8_t node) {
 }
 
 void rfmLoRaStartRx(void) {
-    // clear "RxDone" interrupt
-    regWrite(RFM_LORA_IRQ_FLAGS, 0x40);
+    // clear "RxDone" and "PayloadCrcError" interrupt
+    regWrite(RFM_LORA_IRQ_FLAGS, 0x40 | 0x20);
     rxDone = false;
 
     // get "RxDone" on DIO0
@@ -398,8 +398,8 @@ RxFlags rfmLoRaRxDone(void) {
     RxFlags flags = {.ready = false, .rssi = 255, .crc = false};
     if (rxDone) {
         flags.ready = true;
-        flags.rssi = 0; // TODO
-        flags.crc = 1; // TODO
+        flags.rssi = 157 - regRead(RFM_LORA_PCK_RSSI);
+        flags.crc = !(regRead(RFM_LORA_IRQ_FLAGS) & (1 << 5));
     }
 
     return flags;
