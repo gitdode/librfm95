@@ -423,7 +423,6 @@ size_t rfmLoRaRxRead(uint8_t *payload, size_t size) {
 }
 
 size_t rfmLoRaRx(uint8_t *payload, size_t size) {
-    // TODO required?
     // clear "RxTimeout" and "RxDone" interrupt
     // regWrite(RFM_LORA_IRQ_FLAGS, 0xc0);
 
@@ -461,6 +460,9 @@ size_t rfmLoRaTx(uint8_t *payload, size_t size) {
         _rfmTx(payload[i]);
     }
     _rfmDes();
+
+    // clear "TxDone" interrupt
+    regWrite(RFM_LORA_IRQ_FLAGS, 0x08);
 
     // get "TxDone" on DIO0
     regWrite(RFM_DIO_MAP1, (regRead(RFM_DIO_MAP1) & ~0x80) | 0x40);
