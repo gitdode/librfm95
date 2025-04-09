@@ -8,7 +8,7 @@ Other RFM9x radios might work as well, but were not tested yet.
 I'm impressed how well these radio modules work; the range achieved with 
 simple wire antennas as well as the reliable packet transmission.  
 
-This is work in progress. For the time being, implemented is (FSK and LoRa):
+This is work in progress. Currently available is (FSK and LoRa):
 
 - Transmit a packet
 - Blocking receive a single packet with timeout
@@ -19,7 +19,7 @@ This is work in progress. For the time being, implemented is (FSK and LoRa):
 1. Include `librfm.h` and `librfm.a` in the project
 2. Implement the `_rfm*` functions in `librfm.h` in the application
 (this is to make the library device and CPU frequency independent)
-3. Route interrupts occurring on `DIO0` and `DIO4` to `rfmIrq()`
+3. Route interrupts occurring on `DIO0` and `DIO4`(FSK)/`DIO1`(LoRa) to `rfmIrq()`
 
 ## Range
 
@@ -29,6 +29,9 @@ and a low hill in between.
 
 ### FSK
 
+Transmitting with +17 dBm, reception stopped with an RSSI of about -125 dBm at 
+almost 2.7 km distance - with simple wire antennas, and a low hill in between.  
+
 Compared to the [RFM69](https://github.com/gitdode/librfm) at +13 dBm, it does 
 make it a few hundred meters further  - seems fair enough!  
 
@@ -36,4 +39,4 @@ make it a few hundred meters further  - seems fair enough!
 
 ### LoRa
 
-TODO :-)
+TODO 🙂
