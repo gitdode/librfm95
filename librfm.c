@@ -59,10 +59,10 @@ static void setMode(uint8_t mode) {
  * @param enable
  */
 static void timeoutEnableFSK(bool enable) {
+    // get "Timeout" on DIO4
+    regWrite(RFM_DIO_MAP2, (regRead(RFM_DIO_MAP2) | 0x80) & ~0x40);
+    rxTimeout = false;
     if (enable) {
-        // get "Timeout" on DIO4
-        regWrite(RFM_DIO_MAP2, (regRead(RFM_DIO_MAP2) | 0x80) & ~0x40);
-        rxTimeout = false;
         // TODO calculate - seems to be about 50, 75, 100ms
         regWrite(RFM_FSK_RX_TO_RSSI, 0x1f);
         regWrite(RFM_FSK_RX_TO_PREA, 0x2f);
