@@ -151,7 +151,7 @@ static bool initFSK(uint8_t node) {
     return true;
 }
 
-static bool initLoRa(uint8_t node) {
+static bool initLoRa(void) {
     // SPI interface address pointer in FIFO data buffer (POR 0x00)
     regWrite(RFM_LORA_FIFO_ADDR_PTR, 0x00);
 
@@ -229,7 +229,7 @@ bool rfmInit(uint64_t freq, uint8_t node, bool _lora) {
         // LoRa mode, high frequency mode, sleep mode
         regWrite(RFM_OP_MODE, 0x80);
 
-        return initLoRa(node);
+        return initLoRa();
     } else {
         // FSK mode, FSK modulation, high frequency mode, sleep mode
         regWrite(RFM_OP_MODE, 0x00);
