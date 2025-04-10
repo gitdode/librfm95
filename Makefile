@@ -1,8 +1,8 @@
-# Makefile to build librfm
+# Makefile to build librfm95
 #
 # Simplified version from: https://github.com/hexagon5un/AVR-Programming
 
-MAIN = librfm.c
+MAIN = librfm95.c
 
 CC = avr-gcc
 AR = avr-ar
@@ -25,7 +25,7 @@ SRC += $(TARGET).c
 OBJ = $(SRC:.c=.o) 
 OBJ = $(SRC:.S=.o)
 
-$(TARGET).o: librfm.h utils.h Makefile
+$(TARGET).o: librfm95.h utils.h Makefile
 
 all: $(TARGET).a
 	

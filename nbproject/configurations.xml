@@ -2,7 +2,7 @@
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df root="/home/dode/dev/librfm95" name="0">
-      <in>librfm.c</in>
+      <in>librfm95.c</in>
     </df>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -26,7 +26,7 @@
       </toolsSet>
       <compileType>
       </compileType>
-      <item path="/home/dode/dev/librfm95/librfm.c" ex="false" tool="0" flavor2="0">
+      <item path="/home/dode/dev/librfm95/librfm95.c" ex="false" tool="0" flavor2="0">
       </item>
     </conf>
   </confs>

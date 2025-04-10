@@ -35,7 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/_ext/acb12f8c/librfm.o
+	${OBJECTDIR}/_ext/acb12f8c/librfm95.o
 
 
 # C Compiler Flags
@@ -62,9 +62,9 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/librfm95: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/librfm95 ${OBJECTFILES} ${LDLIBSOPTIONS}
 
-${OBJECTDIR}/_ext/acb12f8c/librfm.o: /home/dode/dev/librfm95/librfm.c
+${OBJECTDIR}/_ext/acb12f8c/librfm95.o: /home/dode/dev/librfm95/librfm95.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/acb12f8c
-	$(COMPILE.c) -g -o ${OBJECTDIR}/_ext/acb12f8c/librfm.o /home/dode/dev/librfm95/librfm.c
+	$(COMPILE.c) -g -o ${OBJECTDIR}/_ext/acb12f8c/librfm95.o /home/dode/dev/librfm95/librfm95.c
 
 # Subprojects
 .build-subprojects:
