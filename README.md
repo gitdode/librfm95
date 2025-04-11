@@ -23,10 +23,6 @@ This is work in progress. Currently available is (FSK and LoRa):
 
 ## Range
 
-Setting `RegPaConfig` to `0xff`, which gives +17 dBm with `PA_BOOST`, reception stopped 
-with an RSSI of about -125 dBm at almost 2.7 km distance - with simple wire antennas, 
-and a low hill in between.  
-
 ### FSK
 
 Transmitting with +17 dBm, reception stopped with an RSSI of about -125 dBm at 
