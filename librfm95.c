@@ -74,7 +74,7 @@ static void timeoutEnableFSK(bool enable) {
     }
 }
 
-static bool initFSK(uint8_t node) {
+static bool initFSK(uint8_t node, uint8_t cast) {
     // bit rate 9.6 kBit/s
     // regWrite(BITRATE_MSB, 0x0d);
     // regWrite(BITRATE_LSB, 0x05);
@@ -138,7 +138,7 @@ static bool initFSK(uint8_t node) {
 
     // node and broadcast address
     regWrite(RFM_FSK_NODE_ADDR, node);
-    regWrite(RFM_FSK_CAST_ADDR, RFM_CAST_ADDRESS);
+    regWrite(RFM_FSK_CAST_ADDR, cast);
 
     // set TX start condition to "at least one byte in FIFO"
     regWrite(RFM_FSK_FIFO_THRESH, 0x8f);
@@ -191,7 +191,7 @@ static bool initLoRa(void) {
     return true;
 }
 
-bool rfmInit(uint64_t freq, uint8_t node, bool _lora) {
+bool rfmInit(uint64_t freq, uint8_t node, uint8_t cast, bool _lora) {
     lora = _lora;
 
     // wait a bit after power on
@@ -234,7 +234,7 @@ bool rfmInit(uint64_t freq, uint8_t node, bool _lora) {
         // FSK mode, FSK modulation, high frequency mode, sleep mode
         regWrite(RFM_OP_MODE, 0x00);
 
-        return initFSK(node);
+        return initFSK(node, cast);
     }
 }
 

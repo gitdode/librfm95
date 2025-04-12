@@ -108,7 +108,6 @@
 #define RFM_MASK_MODE           0x07
 
 #define RFM_F_STEP              61035
-#define RFM_CAST_ADDRESS        0x84
 
 #define RFM_DBM_MIN             2
 #define RFM_DBM_MAX             17
@@ -168,12 +167,16 @@ uint8_t _rfmTx(uint8_t data);
 
 /**
  * Initializes the radio module in FSK or LoRa mode with the given carrier 
- * frequency in kilohertz and node address. Returns true on success, 
- * false otherwise.
+ * frequency in kilohertz and node and brodcast address. 
+ * Returns true on success, false otherwise.
  * 
+ * @param freq carrier frequency
+ * @param node address
+ * @param broadcast address
+ * @param lora LoRa or FSK mode
  * @return success
  */
-bool rfmInit(uint64_t freq, uint8_t node, bool lora);
+bool rfmInit(uint64_t freq, uint8_t node, uint8_t cast, bool lora);
 
 /**
  * Reads interrupt flags. Should be called when any interrupt occurs 
