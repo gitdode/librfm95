@@ -134,8 +134,6 @@ typedef struct {
 /**
  * F_CPU dependent delay of 5 milliseconds.
  * _delay_ms(5);
- * 
- * @param ms
  */
 void _rfmDelay5(void);
 
@@ -180,7 +178,7 @@ bool rfmInit(uint64_t freq, uint8_t node, uint8_t cast, bool lora);
 
 /**
  * Reads interrupt flags. Should be called when any interrupt occurs 
- * on DIO0 or DIO4.
+ * on DIO0 or DIO4 (FSK)/DIO1 (LoRa).
  */
 void rfmIrq(void);
 
@@ -209,7 +207,7 @@ void rfmWake(void);
 void rfmSetNodeAddress(uint8_t address);
 
 /**
- * Sets the output power to -2 to +13 dBm. 
+ * Sets the output power to +2 to +17 dBm. 
  * Values outside that range are ignored.
  * 
  * @param dBm ouput power
