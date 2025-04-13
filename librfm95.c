@@ -343,9 +343,6 @@ size_t rfmReceivePayload(uint8_t *payload, size_t size, bool enable) {
     setMode(RFM_MODE_STDBY);
 
     if (rxTimeout) {
-        // full power as last resort, indicate timeout
-        regWrite(RFM_PA_CONFIG, 0xff);
-
         return 0;
     }
 
