@@ -5,8 +5,8 @@
  * Created on 30. März 2025
  */
 
-#ifndef LIBRFM_H
-#define LIBRFM_H
+#ifndef LIBRFM95_H
+#define LIBRFM95_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -318,4 +318,4 @@ size_t rfmLoRaRx(uint8_t *payload, size_t size);
  */
 size_t rfmLoRaTx(uint8_t *payload, size_t size);
 
-#endif /* LIBRFM_H */
+#endif /* LIBRFM95_H */
