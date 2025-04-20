@@ -218,8 +218,8 @@ bool rfmInit(uint64_t freq, uint8_t node, uint8_t cast, bool _lora) {
     // PA level +17 dBm with PA_BOOST pin (Pmax default/not relevant)
     regWrite(RFM_PA_CONFIG, 0xff);
 
-    // LNA highest gain, no current adjustment
-    regWrite(RFM_LNA, 0x20);
+    // LNA highest gain, boost on, 150% LNA current
+    regWrite(RFM_LNA, 0x23);
 
     if (lora) {
         // go to sleep before switching to LoRa mode
@@ -384,7 +384,7 @@ void rfmLoRaStartRx(void) {
     // get "RxDone" on DIO0
     regWrite(RFM_DIO_MAP1, regRead(RFM_DIO_MAP1) & ~0xc0);
 
-    // set FIFO address pointer to configured TX base address
+    // set FIFO address pointer to configured RX base address
     regWrite(RFM_LORA_FIFO_ADDR_PTR, regRead(RFM_LORA_FIFO_RX_ADDR));
 
     // TODO already is in continuous RX mode most of the time
