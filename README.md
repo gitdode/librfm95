@@ -35,4 +35,4 @@ make it a few hundred meters further  - seems fair enough!
 
 ### LoRa
 
-TODO 🙂
+ToWalk 😅
