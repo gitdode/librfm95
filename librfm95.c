@@ -170,8 +170,8 @@ static bool initLoRa(void) {
     // RX timeout LSB
     regWrite(RFM_LORA_SYMB_TIMEO_LSB, 0x64);
 
-    // static node, AGC auto off
-    regWrite(RFM_LORA_MODEM_CONFIG3, 0x00);
+    // low data rate optimize, static node, AGC auto off
+    regWrite(RFM_LORA_MODEM_CONFIG3, 0x08);
 
     // preamble length MSB
     regWrite(RFM_LORA_PREA_LEN_MSB, 0x00);
