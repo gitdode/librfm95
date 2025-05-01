@@ -39,19 +39,15 @@ With LoRa, reception was stable with about -125 dBm at almost 7 km distance
 somewhat line of sight, with the following configuration (and as well just 
 simple wire antennas):
 
-- Carrier frequency: 868.6 MHz
 - Output power: +17 dBm
 - LNA highest gain, boost on, 150% LNA current
 - Signal bandwidth: 62.5 kHz
 - Error correction code rate: 4/5
 - Spreading factor: 9
-- Preamble length: 12 symbols
-- Explicit header mode
-- CRC on
 - Low Data Rate Optimization
 
-So, LoRa seems to perform significantly better than FSK - as expected - but I'm 
-quite sure FSK can go further than 2.7 km under similar conditions.
+So, LoRa seems to perform significantly better than FSK - as expected - but FSK 
+probably can go further than 2.7 km under similar conditions.
 
 Anyway, these radio modules work very well with both modulation schemes!  
 
