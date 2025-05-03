@@ -161,11 +161,11 @@ static bool initLoRa(void) {
     // read base address in FIFO data buffer for RX demodulator (POR 0x00)
     regWrite(RFM_LORA_FIFO_RX_ADDR, 0x00);
 
-    // signal bandwidth 62.5 kHz, error coding rate 4/5, explicit header mode
-    regWrite(RFM_LORA_MODEM_CONFIG1, 0x62);
+    // signal bandwidth 41.7 kHz, error coding rate 4/5, explicit header mode
+    regWrite(RFM_LORA_MODEM_CONFIG1, 0x52);
 
-    // spreading factor 9, TX single packet mode, CRC enable, RX timeout MSB
-    regWrite(RFM_LORA_MODEM_CONFIG2, 0x94);
+    // spreading factor 10, TX single packet mode, CRC enable, RX timeout MSB
+    regWrite(RFM_LORA_MODEM_CONFIG2, 0xa4);
 
     // RX timeout LSB
     regWrite(RFM_LORA_SYMB_TIMEO_LSB, 0x64);
