@@ -31,6 +31,7 @@
 #define RFM_FSK_BITRATE_LSB     0x03
 #define RFM_FSK_FDEV_MSB        0x04
 #define RFM_FSK_FDEV_LSB        0x05
+#define RFM_FSK_PA_RAMP         0x0a
 #define RFM_FSK_RX_CONFIG       0x0d
 #define RFM_FSK_RSSI_CONFIG     0x0e
 #define RFM_FSK_RSSI_COLLIS     0x0f
