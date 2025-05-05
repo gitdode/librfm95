@@ -171,7 +171,7 @@ static bool initLoRa(void) {
     regWrite(RFM_LORA_MODEM_CONFIG2, 0xa4);
 
     // RX (preamble detection) timeout LSB
-    // (symbol time 24.58 ms * 0x08 = 100.64 ms)
+    // (symbol time 24.58 ms * 0x08 = 196.64 ms)
     regWrite(RFM_LORA_SYMB_TIMEO_LSB, 0x08);
 
     // low data rate optimize, static node, AGC auto off
