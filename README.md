@@ -33,7 +33,7 @@ The configuration:
 - LNA highest gain, boost on, 150% LNA current
 - Modulation shaping Gaussian filter BT = 0.5
 - Transmitter frequency deviation: 10 kHz
-- Receiver channel filter bandwith 20.8 kHz
+- Receiver channel filter bandwith: 20.8 kHz
 
 ![FieldTest6](https://github.com/user-attachments/assets/7ba77a8e-1384-40ab-b151-372788e90d88)
 
