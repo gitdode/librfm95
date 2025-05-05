@@ -83,6 +83,9 @@ static bool initFSK(uint8_t node, uint8_t cast) {
     regWrite(RFM_FSK_FDEV_MSB, 0x00);
     regWrite(RFM_FSK_FDEV_LSB, 0xa4);
 
+    // modulation shaping Gaussian filter BT = 0.5, ramp 40 µs (POR)
+    regWrite(RFM_FSK_PA_RAMP, 0x49);
+
     // AgcAutoOn, receiver trigger event PreambleDetect
     regWrite(RFM_FSK_RX_CONFIG, 0x0e);
 
@@ -98,8 +101,8 @@ static bool initFSK(uint8_t node, uint8_t cast) {
     // channel filter bandwith 20.8 kHz (default 10.4 kHz)
     regWrite(RFM_FSK_RX_BW, 0x14);
 
-    // RX_BW during AFC
-    regWrite(RFM_FSK_AFC_BW, 0x14);
+    // RX_BW during AFC 41.7 kHz (AFC not used)
+    regWrite(RFM_FSK_AFC_BW, 0x13);
 
     // AFC auto on
     // regWrite(AFC_FEI, 0x00);
@@ -108,13 +111,13 @@ static bool initFSK(uint8_t node, uint8_t cast) {
     // PreambleDetectorTol 4 chips per bit
     regWrite(RFM_FSK_PREA_DETECT, 0xaa);
 
-    // Preamble size
+    // Preamble size 5 bytes
     regWrite(RFM_FSK_PREA_MSB, 0x00);
-    regWrite(RFM_FSK_PREA_LSB, 0x03);
+    regWrite(RFM_FSK_PREA_LSB, 0x05);
 
     // AutoRestartRxMode off, PreamblePolarity 0xaa, SyncOn,
-    // FifoFillCondition if SyncAddress, SyncSize + 1 = 4 bytes
-    regWrite(RFM_FSK_SYNC_CONFIG, 0x13);
+    // FifoFillCondition if SyncAddress, SyncSize + 1 = 3 bytes
+    regWrite(RFM_FSK_SYNC_CONFIG, 0x12);
 
     // just set all sync word values to some really creative value
     regWrite(RFM_FSK_SYNC_VAL1, 0x2f);
@@ -167,8 +170,9 @@ static bool initLoRa(void) {
     // spreading factor 10, TX single packet mode, CRC enable, RX timeout MSB
     regWrite(RFM_LORA_MODEM_CONFIG2, 0xa4);
 
-    // RX timeout LSB
-    regWrite(RFM_LORA_SYMB_TIMEO_LSB, 0x64);
+    // RX (preamble detection) timeout LSB
+    // (symbol time 24.58 ms * 0x08 = 100.64 ms)
+    regWrite(RFM_LORA_SYMB_TIMEO_LSB, 0x08);
 
     // low data rate optimize, static node, AGC auto off
     regWrite(RFM_LORA_MODEM_CONFIG3, 0x08);
@@ -183,7 +187,7 @@ static bool initLoRa(void) {
     // regWrite(RFM_LORA_PAYLD_LEN, 0x01);
 
     // max payload length (CRC error if exceeded)
-    regWrite(RFM_LORA_PAYLD_MAX_LEN, 0xff);
+    regWrite(RFM_LORA_PAYLD_MAX_LEN, RFM_LORA_MSG_SIZE);
 
     // frequency hopping disabled
     regWrite(RFM_LORA_HOP_PERIOD, 0x00);
