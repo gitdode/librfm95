@@ -3,10 +3,7 @@
 ## About
 
 Static avr-libc library providing basic support for RFM95 (SX1276) radio modules.
-Other RFM9x radios might work as well, but were not tested yet.  
-
-I'm impressed how well these radio modules work; the range achieved with 
-simple wire antennas as well as the reliable packet transmission.  
+Other RFM9x radios might work as well, but were not tested.  
 
 This is work in progress. Currently available is (FSK and LoRa):
 
