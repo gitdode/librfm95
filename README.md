@@ -25,13 +25,17 @@ This is work in progress. Currently available is (FSK and LoRa):
 
 ### FSK
 
-Transmitting with +17 dBm, reception stopped with an RSSI of about -125 dBm at 
-almost 2.7 km distance - with simple wire antennas, and a low hill in between.  
+At almost 8 km distance line of sight, reception was stable with an RSSI of -98 dBm 
+and +15 dBm Tx power - with simple wire antennas. Quite impressive!
 
-Compared to the [RFM69](https://github.com/gitdode/librfm) at +13 dBm, it does 
-make it a few hundred meters further - seems fair enough!  
+The configuration:
 
-![FieldTest4](https://github.com/user-attachments/assets/67f745c4-a47f-4cb1-a278-547a0b0e01e3)
+- LNA highest gain, boost on, 150% LNA current
+- Modulation shaping Gaussian filter BT = 0.5
+- Transmitter frequency deviation: 10 kHz
+- Receiver channel filter bandwith 20.8 kHz
+
+![FieldTest6](https://github.com/user-attachments/assets/7ba77a8e-1384-40ab-b151-372788e90d88)
 
 ### LoRa
 
@@ -41,14 +45,14 @@ just simple wire antennas):
 
 - LNA highest gain, boost on, 150% LNA current
 - Signal bandwidth: 41.7 kHz
-- Error correction code rate: 4/5
 - Spreading factor: 10
+- Error correction code rate: 4/5
 - Low Data Rate Optimization
 
 ![FieldTest5](https://github.com/user-attachments/assets/7f1d0ec2-f95d-472f-9510-919c16c1f7f6)
 
-So, LoRa seems to perform significantly better than FSK - as expected - but FSK 
-certainly can go a lot further than 2.7 km under similar conditions (plain line of sight).
+So, as expected, range is significatly increased with LoRa, and the link is more robust 
+when there are obstacles in the path, such as buildings and terrain.  
 
 Anyway, these radio modules work very well with both modulation schemes!  
 
