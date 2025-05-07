@@ -95,8 +95,8 @@ static bool initFSK(uint8_t node, uint8_t cast) {
     // 10 dB threshold for interferer detection
     regWrite(RFM_FSK_RSSI_COLLIS, 0x0a);
 
-    // RSSI threshold (POR 0xff)
-    regWrite(RFM_FSK_RSSI_THRESH, 0x94);
+    // RSSI threshold
+    regWrite(RFM_FSK_RSSI_THRESH, 0xff);
 
     // channel filter bandwith 20.8 kHz (default 10.4 kHz)
     regWrite(RFM_FSK_RX_BW, 0x14);
