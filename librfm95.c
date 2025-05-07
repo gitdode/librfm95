@@ -116,7 +116,7 @@ static bool initFSK(uint8_t node, uint8_t cast) {
     regWrite(RFM_FSK_PREA_LSB, 0x05);
 
     // AutoRestartRxMode off, PreamblePolarity 0xaa, SyncOn,
-    // FifoFillCondition if SyncAddress, SyncSize + 1 = 3 bytes
+    // SyncSize + 1 = 3 bytes
     regWrite(RFM_FSK_SYNC_CONFIG, 0x12);
 
     // just set all sync word values to some really creative value
