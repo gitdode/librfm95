@@ -27,7 +27,7 @@ and +15 dBm Tx power - with simple wire antennas. Quite impressive!
 
 The configuration:
 
-- LNA highest gain, boost on, 150% LNA current
+- AGC auto on, boost on, 150% LNA current
 - Modulation shaping Gaussian filter BT = 0.5
 - Transmitter frequency deviation: 10 kHz
 - Receiver channel filter bandwith: 20.8 kHz
