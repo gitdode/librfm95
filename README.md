@@ -36,9 +36,9 @@ The configuration:
 
 ### LoRa
 
-With LoRa, reception was stable with an RSSI of -111 dBm and +15 dBm Tx power at 
-over 12 km distance line of sight, with the following configuration (and as well 
-just simple wire antennas):
+With LoRa, reception was stable with an RSSI of -116 dBm and +17 dBm Tx power at 
+18 km distance line of sight, with the following configuration (and as well just 
+simple wire antennas):
 
 - LNA highest gain, boost on, 150% LNA current
 - Signal bandwidth: 41.7 kHz
@@ -46,14 +46,13 @@ just simple wire antennas):
 - Error correction code rate: 4/5
 - Low Data Rate Optimization
 
-![FieldTest5](https://github.com/user-attachments/assets/7f1d0ec2-f95d-472f-9510-919c16c1f7f6)
+![FieldTest8](https://github.com/user-attachments/assets/6570100d-76c0-4678-ac04-e4bbb1f21067)
 
 So, as expected, range is significatly increased with LoRa, and the link is more robust 
 when there are obstacles in the path, such as buildings and terrain.  
 
 Anyway, these radio modules work very well with both modulation schemes!  
 
-Here's the transmitter placed at Mont-Saint-Aubert, with a nice view to Mont de L'Enclus,
-were the receiver was located:
+Here's the transmitter placed at Mont-Saint-Aubert, with a nice view to Mont de L'Enclus:
 
 ![Transmitter](https://github.com/user-attachments/assets/5ef7898a-f510-4f30-ab93-302a0ff44af7)
