@@ -22,8 +22,8 @@ This is work in progress. Currently available is (FSK and LoRa):
 
 ### FSK
 
-At almost 8 km distance line of sight, reception was stable with an RSSI of -98 dBm 
-and +15 dBm Tx power - with simple wire antennas. Quite impressive!
+At over 12 km distance line of sight, reception was stable with an RSSI of -96 dBm 
+and +9 dBm Tx power - with simple wire antennas. Quite impressive!
 
 The configuration:
 
@@ -32,7 +32,7 @@ The configuration:
 - Transmitter frequency deviation: 10 kHz
 - Receiver channel filter bandwith: 20.8 kHz
 
-![FieldTest6](https://github.com/user-attachments/assets/7ba77a8e-1384-40ab-b151-372788e90d88)
+![FieldTest5](https://github.com/user-attachments/assets/765a2461-4184-4c2f-b034-b31db0d643b4)
 
 ### LoRa
 
