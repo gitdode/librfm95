@@ -22,8 +22,8 @@ This is work in progress. Currently available is (FSK and LoRa):
 
 ### FSK
 
-At over 12 km distance line of sight, reception was stable with an RSSI of -96 dBm 
-and +9 dBm Tx power - with simple wire antennas. Quite impressive!
+At over 12 km distance line of sight, reception and response were stable with an RSSI 
+of -96 dBm and +9 dBm Tx power - with simple wire antennas. Quite impressive!
 
 The configuration:
 
@@ -36,9 +36,9 @@ The configuration:
 
 ### LoRa
 
-With LoRa, reception was stable with an RSSI of -116 dBm and +17 dBm Tx power at 
-18 km distance line of sight, with the following configuration (and as well just 
-simple wire antennas):
+With LoRa, reception and response were stable with an RSSI of -116 dBm and +17 dBm Tx power 
+at 18 km distance line of sight, with the following configuration (and as well just simple 
+wire antennas):
 
 - LNA highest gain, boost on, 150% LNA current
 - Signal bandwidth: 41.7 kHz
@@ -48,8 +48,12 @@ simple wire antennas):
 
 ![FieldTest8](https://github.com/user-attachments/assets/6570100d-76c0-4678-ac04-e4bbb1f21067)
 
-So, as expected, range is significatly increased with LoRa, and the link is more robust 
-when there are obstacles in the path, such as buildings and terrain.  
+So, as expected, and without taking the RSSI too literally, range is increased 
+with LoRa, and the link is much more robust when there are obstacles in the path, 
+such as buildings and terrain.  
+
+The latter seems to be the more advantageous improvement with LoRa, since the 
+range with line of sight is already long with FSK.  
 
 Anyway, these radio modules work very well with both modulation schemes!  
 
